@@ -1,4 +1,4 @@
-package testXML;
+package openRocketToOpenScad;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 
 public class OpenRocketToOpenScad {
 
-  private static String FILENAME = "e:\\rocket3.ork";
+  private static String FILENAME = "e:\\rocket.ork";
   private static int DEPTH_XML = 0;
   private static int freeformfinsetCount = 0;
   private static int trapezoidfinsetCount = 0;
@@ -149,6 +149,12 @@ public class OpenRocketToOpenScad {
                         				System.out.println("tabposition:"+ childNode.getTextContent());
                         			}
                         		  //System.out.println("tabposition:"+ childNode.getTextContent());
+                        		  //String currency = salaryNodeList.item(0).getAttributes().getNamedItem("currency").getTextContent();
+                        		  String tabposition_relativeto =childNode.getAttributes().getNamedItem("relativeto").getTextContent();
+                        		  System.out.println(tabposition_relativeto);
+                        		  //tabposition_relativeto
+                        		  //center
+                        		  //front
                         	  }
                         	  if(childNode.getNodeName().equals("finpoints")) {
                         		  System.out.print("polygon(points=[");

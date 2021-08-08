@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 
 public class OpenRocketToOpenScad {
 
-  private static String FILENAME = "e:\\rocket.ork";
+  private static String FILENAME = "e:\\rocket5.ork";
   private static int DEPTH_XML = 0;
   private static int freeformfinsetCount = 0;
   private static int trapezoidfinsetCount = 0;
@@ -34,7 +34,7 @@ public class OpenRocketToOpenScad {
   public static void main(String[] args) {
 	  
 	  Path currentRelativePath = Paths.get("");
-	  outPath = currentRelativePath.toAbsolutePath().toString();
+	  outPath = currentRelativePath.toAbsolutePath().toString() + "\\";
 	  System.out.println("Current absolute path is: " + outPath);
 
 	  for (String a: args) {
@@ -104,6 +104,9 @@ public class OpenRocketToOpenScad {
             		  float tabheight=0; 
             		  float tablength=0;
             		  float tabposition=0;
+            		  float rootchord =0;
+            		  String tabposition_relativeto="";
+            		  
             		  NodeList childNodesList = node.getChildNodes();
             		  System.out.println("//---freeformfinset---");	
             		  fileContent= "//---freeformfinset---\n";
@@ -113,7 +116,7 @@ public class OpenRocketToOpenScad {
                         	  if(childNode.getNodeName().equals("tabheight")) {
                         		  
                         		  try {
-                        			  tabheight = Float.parseFloat(childNode.getTextContent().toString());
+                        			  tabheight = 1000 *Float.parseFloat(childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -126,7 +129,7 @@ public class OpenRocketToOpenScad {
                         	  if(childNode.getNodeName().equals("tablength")) {
                         		  
                         		  try {
-                        			  tablength = Float.parseFloat( childNode.getTextContent().toString());
+                        			  tablength = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -140,7 +143,7 @@ public class OpenRocketToOpenScad {
                         	  if(childNode.getNodeName().equals("tabposition")) {
                         		  
                         		  try {
-                        			  tabposition = Float.parseFloat( childNode.getTextContent().toString());
+                        			  tabposition = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -150,7 +153,7 @@ public class OpenRocketToOpenScad {
                         			}
                         		  //System.out.println("tabposition:"+ childNode.getTextContent());
                         		  
-                        		  String tabposition_relativeto =childNode.getAttributes().getNamedItem("relativeto").getTextContent();
+                        		  tabposition_relativeto =childNode.getAttributes().getNamedItem("relativeto").getTextContent();
                         		  System.out.println(tabposition_relativeto);
                         		  //tabposition_relativeto
                         		  //center
@@ -167,7 +170,7 @@ public class OpenRocketToOpenScad {
                         	        	  Element element = (Element) subChildNode;
                         	        	  float x=0;
                                 		  try {
-                                			  x = Float.parseFloat( element.getAttribute("x").toString());
+                                			  x = 1000 * Float.parseFloat( element.getAttribute("x").toString());
                                 			}
                                 			catch (NumberFormatException e)
                                 			{
@@ -176,7 +179,7 @@ public class OpenRocketToOpenScad {
                                 			}
                                 		  float y=0;
                                 		  try {
-                                			  y = Float.parseFloat( element.getAttribute("y").toString());
+                                			  y = 1000 * Float.parseFloat( element.getAttribute("y").toString());
                                 			}
                                 			catch (NumberFormatException e)
                                 			{
@@ -185,31 +188,45 @@ public class OpenRocketToOpenScad {
                                 			}
                         	        	  //System.out.println("x:"+ x*1000 + " y:" +y*1000);
                                 		  if(b<subChildNodesList.getLength() -2) {
-                                			  System.out.print("[" + x*1000 +","+ y*1000 +"],");
-                                			  fileContent = fileContent +"[" + x*1000 +","+ y*1000 +"],";
+                                			  System.out.print("[" + x +","+ y +"],");
+                                			  fileContent = fileContent +"[" + x +","+ y +"],";
                                 		  }
                                 		  else {
-                                			  System.out.print("[" + x*1000 +","+ y*1000 +"]");
-                                			  fileContent = fileContent +"[" + x*1000 +","+ y*1000 +"]";
+                                			  System.out.print("[" + x +","+ y +"]");
+                                			  fileContent = fileContent +"[" + x +","+ y +"]";
+                                		  }
+                                		  if(b==1) {
+                                			  rootchord =x;
                                 		  }
                         	          }                      	          
                         		  }
                         		  System.out.println("]);");
                         		  fileContent = fileContent +"]);\n";
-                        		  
-                        		  
+                        		    
                         	  }
                         	 
                         	  
                           }
             		  }
-            		  System.out.println("polygon(points=[["+(tabposition*1000) +",0],["+ (tabposition*1000) +",-"+(tabheight*1000) +
-            				  "],["+ ((tablength +tabposition) *1000)+",-" + (tabheight*1000)+ 
-            				  "],["+ ((tablength +tabposition) *1000)+",-" + (0)+"]]);");
             		  
-            		  fileContent = fileContent +"polygon(points=[["+(tabposition*1000) +",0],["+ (tabposition*1000) +",-"+(tabheight*1000) +
-            				  "],["+ ((tablength +tabposition) *1000)+",-" + (tabheight*1000)+ 
-            				  "],["+ ((tablength +tabposition) *1000)+",-" + (0)+"]]);\n";
+            		  
+            		  if (tabposition_relativeto.equals("center")) {
+            			  System.out.print("translate(["+ ((-rootchord/2)+(tabposition)+(tablength/2))+",0,0])");
+            			  fileContent = fileContent +"translate(["+ ((-rootchord/2)+(tabposition)+(tablength/2))+",0,0])";
+            			  //float center = 
+            		  } else if (tabposition_relativeto.equals("front")) {
+            			  
+            		  } else if (tabposition_relativeto.equals("end")) {  
+            			  
+            		  }
+            		  System.out.println("polygon(points=[["+ 0 +",0],["+ 0 +",-" + tabheight +
+            				  "],["+ tablength + ",-" + tabheight + 
+            				  "],["+ tablength + ",-" + 0 + "]]);");
+            		  
+            		  fileContent = fileContent +"polygon(points=[["+ 0 +",0],["+ 0 +",-"+tabheight +
+            				  "],["+ tablength + ",-" + tabheight+ 
+            				  "],["+ tablength + ",-" + 0 + "]]);\n";
+            		  
             		  
             		  writeFile (fileName,  fileContent);
             		  //tabheight
@@ -230,6 +247,7 @@ public class OpenRocketToOpenScad {
             		  float tabposition=0;
             		  float rootchord =0;
             		  float height =0;
+            		  String tabposition_relativeto ="";
             		  
             		  NodeList childNodesList = node.getChildNodes();
             		  System.out.println("//---ellipticalfinset---");
@@ -239,7 +257,7 @@ public class OpenRocketToOpenScad {
                           if (childNode.getNodeType() == Node.ELEMENT_NODE) {
                         	  if(childNode.getNodeName().equals("tabheight")) {
                         		  try {
-                        			  tabheight = Float.parseFloat(childNode.getTextContent().toString());
+                        			  tabheight = 1000* Float.parseFloat(childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -251,7 +269,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("tablength")) {
                         		  try {
-                        			  tablength = Float.parseFloat( childNode.getTextContent().toString());
+                        			  tablength = 1000* Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -263,7 +281,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("tabposition")) {
                         		  try {
-                        			  tabposition = Float.parseFloat( childNode.getTextContent().toString());
+                        			  tabposition = 1000* Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -272,10 +290,12 @@ public class OpenRocketToOpenScad {
                         				System.out.println("tabposition:"+ childNode.getTextContent());
                         			}
                         		  //System.out.println("tabposition:"+ childNode.getTextContent());
+                        		  tabposition_relativeto =childNode.getAttributes().getNamedItem("relativeto").getTextContent();
+                        		  System.out.println(tabposition_relativeto);
                         	  }
                         	  if(childNode.getNodeName().equals("rootchord")) {
                         		  try {
-                        			  rootchord = Float.parseFloat( childNode.getTextContent().toString());
+                        			  rootchord = 1000* Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -287,7 +307,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("height")) {
                         		  try {
-                        			  height = Float.parseFloat( childNode.getTextContent().toString());
+                        			  height = 1000* Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -302,18 +322,32 @@ public class OpenRocketToOpenScad {
             		  }
             		  System.out.println("difference() {");
             		  fileContent = fileContent + "difference() {";
-            		  System.out.println("scale([1,"+(2*height/rootchord)+"])circle(d="+rootchord*1000+",$fn=100);");
-            		  fileContent = fileContent + "scale([1,"+(2*height/rootchord)+"])circle(d="+rootchord*1000+",$fn=100);\n";
-            		  System.out.println("translate([0,"+(height/2) *1000+",0])square(["+ rootchord*1000+","+height*1000+"],center =true);");
-            		  fileContent = fileContent + "translate([0,"+(height/2) *1000+",0])square(["+ rootchord*1000+","+height*1000+"],center =true);\n";
+            		  System.out.println("scale([1,"+(2*height/rootchord)+"])circle(d="+rootchord+",$fn=100);");
+            		  fileContent = fileContent + "scale([1,"+(2*height/rootchord)+"])circle(d="+rootchord+",$fn=100);\n";
+            		  System.out.println("translate([0,"+(height/2) +",0])square(["+ rootchord+","+height+"],center =true);");
+            		  fileContent = fileContent + "translate([0,"+(height/2) +",0])square(["+ rootchord+","+height+"],center =true);\n";
             		  System.out.println("}");
             		  fileContent = fileContent +"}\n";
-            		  System.out.println("translate(["+ (-rootchord/2)*1000+",0.0,0]) polygon(points=[["+(tabposition*1000) +",0],["+ (tabposition*1000) +","+(tabheight*1000) +
-            				  "],["+ ((tablength +tabposition) *1000)+"," + (tabheight*1000)+ 
-            				  "],["+ ((tablength +tabposition) *1000)+"," + (0)+"]]);");
-            		  fileContent = fileContent +"translate(["+ (-rootchord/2)*1000+",0.0,0]) polygon(points=[["+(tabposition*1000) +",0],["+ (tabposition*1000) +","+(tabheight*1000) +
-            				  "],["+ ((tablength +tabposition) *1000)+"," + (tabheight*1000)+ 
-            				  "],["+ ((tablength +tabposition) *1000)+"," + (0)+"]]);\n";
+            		  
+            		  //tab
+            		  if(tabposition_relativeto.equals("center")) {
+            			  System.out.print("translate(["+ ((-rootchord/2)+(tabposition)+(tablength/2))+",0,0])");
+            			  fileContent = fileContent +"translate(["+ ((-rootchord/2)+(tabposition)+(tablength/2))+",0,0])";
+            		  }
+            		  else if(tabposition_relativeto.equals("front")) {
+            			  System.out.print("translate(["+ (tabposition-(rootchord/2))+",0,0])");
+            			  fileContent = fileContent +"translate(["+ ((-rootchord/2)+(tabposition)+(tablength/2))+",0,0])"; 
+            		  } 
+            		  else if(tabposition_relativeto.equals("end")) {
+            			  System.out.print("translate(["+ (-tabposition-(rootchord/2))+",0,0])");
+            			  fileContent = fileContent +"translate(["+ ((-rootchord/2)+(tabposition)+(tablength/2))+",0,0])"; 
+            		  }
+            		  System.out.println(" polygon(points=[["+0 +",0],["+ 0 +","+tabheight +
+            				  "],["+ tablength + "," + tabheight+ 
+            				  "],["+ tablength + "," + 0+"]]);");
+            		  fileContent = fileContent + " polygon(points=[["+tabposition +",0],["+ 0 +","+tabheight +
+            				  "],["+ tablength + "," + tabheight+ 
+            				  "],["+ tablength + "," + 0 + "]]);\n";
             		  
             		  writeFile (fileName,  fileContent);
             	  }
@@ -329,6 +363,8 @@ public class OpenRocketToOpenScad {
             		  float tipchord =0;
             		  float sweeplength =0;
             		  float height =0;
+            		  String tabposition_relativeto ="";
+            		  
             		  NodeList childNodesList = node.getChildNodes();
             		  System.out.println("//---trapezoidfinset---");
             		  fileContent = "//---trapezoidfinset---\n";
@@ -337,7 +373,7 @@ public class OpenRocketToOpenScad {
                           if (childNode.getNodeType() == Node.ELEMENT_NODE) {
                         	  if(childNode.getNodeName().equals("tabheight")) {
                         		  try {
-                        			  tabheight = Float.parseFloat(childNode.getTextContent().toString());
+                        			  tabheight = 1000 * Float.parseFloat(childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -349,7 +385,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("tablength")) {
                         		  try {
-                        			  tablength = Float.parseFloat( childNode.getTextContent().toString());
+                        			  tablength = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -361,7 +397,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("tabposition")) {
                         		  try {
-                        			  tabposition = Float.parseFloat( childNode.getTextContent().toString());
+                        			  tabposition = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -370,10 +406,12 @@ public class OpenRocketToOpenScad {
                         				System.out.println("tabposition:"+ childNode.getTextContent());
                         			}
                         		  //System.out.println("tabposition:"+ childNode.getTextContent());
+                        		  tabposition_relativeto =childNode.getAttributes().getNamedItem("relativeto").getTextContent();
+                        		  System.out.println(tabposition_relativeto);
                         	  }
                         	  if(childNode.getNodeName().equals("rootchord")) {
                         		  try {
-                        			  rootchord = Float.parseFloat( childNode.getTextContent().toString());
+                        			  rootchord = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -385,7 +423,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("tipchord")) {
                         		  try {
-                        			  tipchord = Float.parseFloat( childNode.getTextContent().toString());
+                        			  tipchord = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -397,7 +435,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("sweeplength")) {
                         		  try {
-                        			  sweeplength = Float.parseFloat( childNode.getTextContent().toString());
+                        			  sweeplength = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -409,7 +447,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("height")) {
                         		  try {
-                        			  height = Float.parseFloat( childNode.getTextContent().toString());
+                        			  height = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -421,20 +459,30 @@ public class OpenRocketToOpenScad {
                         	  }
                           }
             		  }
-            		  System.out.println("polygon(points=[[0,0],["+ (rootchord*1000) +","+0 +
-            				  "],["+ ((tipchord +sweeplength) *1000)+"," + (height*1000)+ 
-            				  "],["+ (sweeplength *1000)+"," + (height*1000)+"]]);");
-            		  fileContent = fileContent + "polygon(points=[[0,0],["+ (rootchord*1000) +","+0 +
-            				  "],["+ ((tipchord +sweeplength) *1000)+"," + (height*1000)+ 
-            				  "],["+ (sweeplength *1000)+"," + (height*1000)+"]]);\n";
+            		  System.out.println("polygon(points=[[0,0],["+ rootchord +","+0 +
+            				  "],["+ (tipchord + sweeplength) + "," + height+ 
+            				  "],["+ sweeplength + "," + height+"]]);");
+            		  fileContent = fileContent + "polygon(points=[[0,0],["+ rootchord +","+0 +
+            				  "],["+ (tipchord +sweeplength) + "," + height+ 
+            				  "],["+ sweeplength + "," + height +"]]);\n";
             		  
-            		  System.out.println("polygon(points=[["+(tabposition*1000) +",0],["+ (tabposition*1000) +",-"+(tabheight*1000) +
-            				  "],["+ ((tablength +tabposition) *1000)+",-" + (tabheight*1000)+ 
-            				  "],["+ ((tablength +tabposition) *1000)+",-" + (0)+"]]);");
+            		  if( tabposition_relativeto.equals("center")) {  
+            			  System.out.print("translate(["+ ((rootchord/2) -(tablength/2) - tabposition) +"," + 0 + ","+ 0 + "])");
+            			  fileContent = fileContent + "translate(["+ ((rootchord/2) -(tablength/2) - tabposition) +"," + 0 + ","+ 0 + "])";
+            		  } else if(tabposition_relativeto.equals("front")) {
+            			  
+            		  } else if(tabposition_relativeto.equals("end")) {
+            			  
+            		  }
             		  
-            		  fileContent = fileContent + "polygon(points=[["+(tabposition*1000) +",0],["+ (tabposition*1000) +",-"+(tabheight*1000) +
-            				  "],["+ ((tablength +tabposition) *1000)+",-" + (tabheight*1000)+ 
-            				  "],["+ ((tablength +tabposition) *1000)+",-" + (0)+"]]);\n";
+            		  System.out.println("polygon(points=[["+ 0 +",0],["+ 0 +",-"+tabheight +
+            				  "],["+ (tablength ) +",-" + tabheight+ 
+            				  "],["+ (tablength) +",-" + 0 + "]]);");
+            		  
+            		  fileContent = fileContent + "polygon(points=[["+tabposition +",0],["+ tabposition +",-"+tabheight +
+            				  "],["+ (tablength +tabposition) +",-" + tabheight+ 
+            				  "],["+ (tablength +tabposition) +",-" + 0+"]]);\n";
+            		  
             		  
             		  writeFile (fileName,  fileContent);
             		  //tabheight
@@ -462,7 +510,7 @@ public class OpenRocketToOpenScad {
                           if (childNode.getNodeType() == Node.ELEMENT_NODE) {
                         	  if(childNode.getNodeName().equals("outerradius")) {
                         		  try {
-                        			  outerradius = Float.parseFloat( childNode.getTextContent().toString());
+                        			  outerradius = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -474,7 +522,7 @@ public class OpenRocketToOpenScad {
                         	  }
                         	  if(childNode.getNodeName().equals("innerradius")) {
                         		  try {
-                        			  innerradius = Float.parseFloat( childNode.getTextContent().toString());
+                        			  innerradius = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -488,10 +536,10 @@ public class OpenRocketToOpenScad {
             		  }
             		  System.out.println("difference() {");
             		  fileContent = fileContent + "difference() {\n";
-            		  System.out.println("circle(r="+outerradius*1000+", $fn=100);");
-            		  fileContent = fileContent + "circle(r="+outerradius*1000+", $fn=100);\n";
-            		  System.out.println("circle(r="+innerradius*1000+", $fn=100);");
-            		  fileContent = fileContent +"circle(r="+innerradius*1000+", $fn=100);\n";
+            		  System.out.println("circle(r="+outerradius+", $fn=100);");
+            		  fileContent = fileContent + "circle(r="+outerradius+", $fn=100);\n";
+            		  System.out.println("circle(r="+innerradius+", $fn=100);");
+            		  fileContent = fileContent +"circle(r="+innerradius+", $fn=100);\n";
             		  System.out.println("}");
             		  fileContent = fileContent +"}\n";
             		  
@@ -514,7 +562,7 @@ public class OpenRocketToOpenScad {
                         		  
                         		  float outerradius=0;
                         		  try {
-                        			  outerradius = Float.parseFloat( childNode.getTextContent().toString());
+                        			  outerradius = 1000 * Float.parseFloat( childNode.getTextContent().toString());
                         			}
                         			catch (NumberFormatException e)
                         			{
@@ -524,8 +572,8 @@ public class OpenRocketToOpenScad {
                         			}
                         		  //System.out.println("outerradius:"+ outerradius*1000);
                         		  
-                        		  System.out.println("circle(r="+outerradius*1000+", $fn=100);");
-                        		  fileContent = fileContent + "circle(r="+outerradius*1000+", $fn=100);\n";
+                        		  System.out.println("circle(r="+outerradius+", $fn=100);");
+                        		  fileContent = fileContent + "circle(r="+outerradius+", $fn=100);\n";
                         	  }
                           }
             		  }

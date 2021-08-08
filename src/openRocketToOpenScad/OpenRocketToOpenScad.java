@@ -149,7 +149,7 @@ public class OpenRocketToOpenScad {
                         				System.out.println("tabposition:"+ childNode.getTextContent());
                         			}
                         		  //System.out.println("tabposition:"+ childNode.getTextContent());
-                        		  //String currency = salaryNodeList.item(0).getAttributes().getNamedItem("currency").getTextContent();
+                        		  
                         		  String tabposition_relativeto =childNode.getAttributes().getNamedItem("relativeto").getTextContent();
                         		  System.out.println(tabposition_relativeto);
                         		  //tabposition_relativeto

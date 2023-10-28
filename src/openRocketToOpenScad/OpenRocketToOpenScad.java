@@ -11,7 +11,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -19,10 +21,13 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class OpenRocketToOpenScad {
 
-	private static String FILENAME = "e:\\rocket.ork";
+	//private static String FILENAME = "e:\\rocket.ork";
+	private static String FILENAME = "e:\\PML_AMRAAM3_38mm-dual.ork";
 	private static int DEPTH_XML = 0;
 	private static int freeformfinsetCount = 0;
 	private static int trapezoidfinsetCount = 0;
@@ -32,6 +37,7 @@ public class OpenRocketToOpenScad {
 	private static int tubeCouplerCount = 0;
 	private static int bodyTubeCount = 0;
 	private static int noiseConeCount = 0;
+	private static int innerTubeCount = 0;
 	private static String outPath = "e:\\";
 	private static float bodyTubeIner = 0;
 
@@ -59,8 +65,8 @@ public class OpenRocketToOpenScad {
 
 			// parse XML file
 			DocumentBuilder db = dbf.newDocumentBuilder();
-
-			Document doc = db.parse(new File(FILENAME));
+			unzip(FILENAME, "e:\\"); 
+			Document doc = db.parse(new File("e:\\rocket.ork"));
 
 			// optional, but recommended
 			// http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
@@ -130,7 +136,10 @@ public class OpenRocketToOpenScad {
 					if (node.getNodeName().equals("bulkhead")) {
 						nodeBulkhead(node);
 					}
-
+					//innertube
+					if (node.getNodeName().equals("innertube")) {
+						nodeInnerTube(node);
+					}
 					printNode(node.getChildNodes(), level);
 					// how depth is it?
 					if (level > DEPTH_XML) {
@@ -148,7 +157,6 @@ public class OpenRocketToOpenScad {
 		String fileContent = "";
 		String fileContent3D = "";
 		float outerradius = 0;
-		// double outerradius=0;
 		float lenght = 0;
 		DecimalFormat df = new DecimalFormat("0.00");
 		System.out.println("//-----bulkhead----");
@@ -291,6 +299,57 @@ public class OpenRocketToOpenScad {
 		return outerradius - thickness;
 	}
 
+	private static void  nodeInnerTube(Node node) {
+		innerTubeCount++;
+		String fileName3D = outPath + "inner-tube-3d" + innerTubeCount + ".scad";
+		String fileContent3D = "";
+		float length = 0;
+		float outerradius = 0;
+		float thickness = 0;
+		DecimalFormat df = new DecimalFormat("0.00");
+		NodeList childNodesList = node.getChildNodes();
+		for (int a = 0; a < childNodesList.getLength(); a++) {
+			Node childNode = childNodesList.item(a);
+			if (childNode.getNodeType() == Node.ELEMENT_NODE) {
+				if (childNode.getNodeName().equals("outerradius")) {
+
+					try {
+						outerradius = 1000.0f * Float.parseFloat(childNode.getTextContent().toString());
+					} catch (NumberFormatException e) {
+						outerradius = 0;
+						System.out.println("outerradius error");
+						System.out.println("outerradius:" + outerradius * 1000);
+					}
+
+				}
+				if (childNode.getNodeName().equals("length")) {
+					try {
+						length = 1000.0f * Float.parseFloat(childNode.getTextContent().toString());
+					} catch (NumberFormatException e) {
+						length = 0;
+						System.out.println("length error");
+						System.out.println("length:" + length * 1000);
+					}
+				}
+				if (childNode.getNodeName().equals("thickness")) {
+					try {
+						thickness = 1000.0f * Float.parseFloat(childNode.getTextContent().toString());
+					} catch (NumberFormatException e) {
+						thickness = 0;
+						System.out.println("thickness error");
+						System.out.println("thickness:" + thickness * 1000);
+					}
+				}
+			}
+		}
+		fileContent3D = "difference() {\n";
+		fileContent3D = fileContent3D + "cylinder(r=" + df.format(outerradius) + ", h=" + df.format(length)
+				+ ", $fn=200);\n";
+		fileContent3D = fileContent3D + "cylinder(r=" + df.format(outerradius - thickness) + ", h=" + df.format(length)
+				+ ", $fn=200);\n";
+		fileContent3D = fileContent3D + "}";
+		writeFile(fileName3D, fileContent3D);
+	}
 	private static void nodeNoseCone(Node node) {
 		noiseConeCount++;
 		String fileName3D = outPath + "body-tube-3d" + bodyTubeCount + ".scad";
@@ -298,6 +357,10 @@ public class OpenRocketToOpenScad {
 		float length = 0;
 		float aftradius = 0;
 		float thickness = 0;
+		float aftshoulderradius = 0;
+		float aftshoulderlength =0;
+		float aftshoulderthickness = 0;
+		String shape = "ogive";
 		DecimalFormat df = new DecimalFormat("0.00");
 		NodeList childNodesList = node.getChildNodes();
 		for (int a = 0; a < childNodesList.getLength(); a++) {
@@ -326,13 +389,53 @@ public class OpenRocketToOpenScad {
 						thickness = 1000.0f * Float.parseFloat(childNode.getTextContent().toString());
 					} catch (NumberFormatException e) {
 						thickness = 0;
-						System.out.println("length error");
-						System.out.println("length:" + thickness * 1000);
+						System.out.println("thickness error");
+						System.out.println("thickness:" + thickness * 1000);
 					}
+				}
+				if (childNode.getNodeName().equals("aftradius")) {
+					try {
+						aftshoulderradius = 1000.0f * Float.parseFloat(childNode.getTextContent().toString());
+					} catch (NumberFormatException e) {
+						aftshoulderradius = 0;
+						System.out.println("aftshoulderradius error");
+						System.out.println("aftshoulderradius:" + aftshoulderradius * 1000);
+					}
+				}
+				if (childNode.getNodeName().equals("aftshoulderlength")) {
+					try {
+						aftshoulderlength = 1000.0f * Float.parseFloat(childNode.getTextContent().toString());
+					} catch (NumberFormatException e) {
+						aftshoulderlength = 0;
+						System.out.println("aftshoulderlength error");
+						System.out.println("aftshoulderlength:" + aftshoulderlength * 1000);
+					}
+				}
+				if (childNode.getNodeName().equals("aftshoulderthickness")) {
+					try {
+						aftshoulderthickness = 1000.0f * Float.parseFloat(childNode.getTextContent().toString());
+					} catch (NumberFormatException e) {
+						aftshoulderthickness = 0;
+						System.out.println("aftshoulderthickness error");
+						System.out.println("aftshoulderthickness:" + aftshoulderthickness * 1000);
+					}
+				}
+				if (childNode.getNodeName().equals("shape")) {
+					shape = childNode.getTextContent().toString();	
 				}
 			}
 		}
-
+		if(shape.equals("conical")) {
+			noseConeConical(aftradius, length, thickness);
+		}
+		if(shape.equals("ogive")) {
+			noseConeOgive(aftradius, length, thickness);
+		}
+		// ellipsoid
+		if(shape.equals("ellipsoid")) {
+			noseConeEllipsoid(aftradius, length, thickness);
+		}
+		
 	}
 
 	private static void nodeFreeFormFinset(Node node) {
@@ -756,4 +859,121 @@ public class OpenRocketToOpenScad {
 		// outerradius
 		// innerradius
 	}
+	
+	private static void noseConeConical(float aftradius, float length, float thickness) {
+		String fileContent3D = "";
+		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
+		DecimalFormat df = new DecimalFormat("0.00");
+		
+		fileContent3D = fileContent3D + "difference() {\n";
+		fileContent3D = fileContent3D + "cylinder(r1 = " + df.format(aftradius) + ", r2 =0, h =" +df.format(length)+ ");";
+		fileContent3D = fileContent3D + "translate([0,0, - thickness]) cylinder(r1 = " + df.format(aftradius- thickness) + ", r2 =0, h =" +df.format(length)+ ", $fn=200);";
+		fileContent3D = fileContent3D + "}\n";
+		writeFile(fileName3D, fileContent3D);
+	}
+	
+	private static void noseConeOgive(float aftradius, float length, float thickness) {
+		String fileContent3D = "";
+		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
+		DecimalFormat df = new DecimalFormat("0.00");
+		
+		//fileContent3D = "L= "+ df.format(length) + ";\nR=" + df.format(aftradius) + ";\nnof=30;" ;
+		
+		fileContent3D = fileContent3D + "module ogive(L,R) { \n ";
+		fileContent3D = fileContent3D  + "nof=L/2;\n" ;
+		fileContent3D = fileContent3D + "	phi = (pow(R,2) + pow(L,2))/ (2*R);\n ";
+		fileContent3D = fileContent3D + "	$fn=100;\nH2=L/nof;\nx1= 0;\nx2=0;\nA1=0;\nA2= 0;\n";
+		fileContent3D = fileContent3D + "	for (i=[1:nof]) {\n";
+		fileContent3D = fileContent3D + "		assign(x1 = ((L/nof)*(i-1)),\n";
+		fileContent3D = fileContent3D + "		x2 = ((L/nof)*i),\n";
+		fileContent3D = fileContent3D + "		A1= sqrt(pow(phi,2) - pow((L - ((L/nof)*(i-1))), 2) ) + (R - phi),\n";
+		fileContent3D = fileContent3D + "		A2= sqrt(pow(phi,2) - pow((L - ((L/nof)*i)), 2) ) + (R - phi),\n";
+		fileContent3D = fileContent3D + "		H1= (L/nof)*i)\n";
+		fileContent3D = fileContent3D + "		{\n";
+		fileContent3D = fileContent3D + "			translate ([0,0, L- H1]) cylinder (r1 = A2, r2 = A1 , h= H2);\n";
+		fileContent3D = fileContent3D + "		}\n";
+		fileContent3D = fileContent3D + "	}\n";
+		fileContent3D = fileContent3D + "}\n";
+		fileContent3D = fileContent3D + "difference() {\n";
+		fileContent3D = fileContent3D + "ogive("+df.format(length)+","+df.format(aftradius) +");\n";
+		fileContent3D = fileContent3D + "translate([0,0,-"+thickness +"])ogive(" +df.format(length)+","+df.format(aftradius-thickness) +");\n";
+		fileContent3D = fileContent3D + "}\n";
+		writeFile(fileName3D, fileContent3D);
+	}
+	
+	private static void noseConeEllipsoid(float aftradius, float length, float thickness) {
+		String fileContent3D = "";
+		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
+		DecimalFormat df = new DecimalFormat("0.00");
+		
+		fileContent3D = fileContent3D + "difference() {\n";
+		fileContent3D = fileContent3D + "}\n";
+		writeFile(fileName3D, fileContent3D);
+	}
+	
+	private static void noseConePowerSeries(float aftradius, float length, float thickness) {
+		String fileContent3D = "";
+		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
+		DecimalFormat df = new DecimalFormat("0.00");
+		
+		fileContent3D = fileContent3D + "difference() {\n";
+		fileContent3D = fileContent3D + "}\n";
+		writeFile(fileName3D, fileContent3D);
+	}
+
+	private static void noseConeParabolicSeries(float aftradius, float length, float thickness) {
+		String fileContent3D = "";
+		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
+		DecimalFormat df = new DecimalFormat("0.00");
+		
+		fileContent3D = fileContent3D + "difference() {\n";
+		fileContent3D = fileContent3D + "}\n";
+		writeFile(fileName3D, fileContent3D);
+	}
+	
+	private static void noseConeHaackSeries(float aftradius, float length, float thickness) {
+		String fileContent3D = "";
+		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
+		DecimalFormat df = new DecimalFormat("0.00");
+		
+		fileContent3D = fileContent3D + "difference() {\n";
+		fileContent3D = fileContent3D + "}\n";
+		writeFile(fileName3D, fileContent3D);
+	}
+	private static void unzip(String zipFilePath, String destDir) {
+        File dir = new File(destDir);
+        // create output directory if it doesn't exist
+        if(!dir.exists()) dir.mkdirs();
+        FileInputStream fis;
+        //buffer for read and write data to file
+        byte[] buffer = new byte[1024];
+        try {
+            fis = new FileInputStream(zipFilePath);
+            ZipInputStream zis = new ZipInputStream(fis);
+            ZipEntry ze = zis.getNextEntry();
+            while(ze != null){
+                String fileName = ze.getName();
+                File newFile = new File(destDir + File.separator + fileName);
+                System.out.println("Unzipping to "+newFile.getAbsolutePath());
+                //create directories for sub directories in zip
+                new File(newFile.getParent()).mkdirs();
+                FileOutputStream fos = new FileOutputStream(newFile);
+                int len;
+                while ((len = zis.read(buffer)) > 0) {
+                fos.write(buffer, 0, len);
+                }
+                fos.close();
+                //close this ZipEntry
+                zis.closeEntry();
+                ze = zis.getNextEntry();
+            }
+            //close last ZipEntry
+            zis.closeEntry();
+            zis.close();
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+    }
 }

@@ -6,6 +6,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -45,6 +47,13 @@ public class OpenRocketToOpenScad {
 	private static float bodyTubeIner = 0;
 
 	public static void main(String[] args) {
+		
+		JFrame frame = new JFrame("OpenRocket to OpenScad");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(300,300);
+        JButton button1 = new JButton("Press");
+        frame.getContentPane().add(button1);
+        frame.setVisible(true);
 
 		Path currentRelativePath = Paths.get("");
 		outPath = currentRelativePath.toAbsolutePath().toString() + "\\";
@@ -429,35 +438,32 @@ public class OpenRocketToOpenScad {
 			}
 		}
 		if(shape.equals("conical")) {
-			//noseConeConical(aftradius, length, thickness);
-			noseConeConicalAndShoulder(aftradius, length, thickness, 
-					aftshoulderradius, aftshoulderlength, aftshoulderthickness);
+			noseConeAndShoulder(aftradius, length, thickness, 
+					aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "Conical");
 		}
 		if(shape.equals("ogive")) {
-			//noseConeOgive(aftradius, length, thickness);
-			noseConeOgiveAndShoulder(aftradius, length, thickness, 
-					aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f);
+			noseConeAndShoulder(aftradius, length, thickness, 
+					aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "Ogive");
 		}
 		// ellipsoid
 		if(shape.equals("ellipsoid")) {
-			//noseConeEllipsoid(aftradius, length, thickness);
-			noseConeEllipsoidAndShoulder(aftradius, length, thickness, 
-					aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f);
+			noseConeAndShoulder(aftradius, length, thickness, 
+					aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "Ellipsoid");
 		}
 		// PowerSeries
 		if(shape.equals("powerseries")) {
-			noseConePowerSeriesAndShoulder(aftradius, length, thickness, 
-					aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f);
+			noseConeAndShoulder(aftradius, length, thickness, 
+					aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "PowerSeries");
 		}
 		// ParabolicSeries
 		if(shape.equals("parabolicseries")) {
-			noseConeParabolicSeriesAndShoulder(aftradius, length, thickness, 
-						aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f);
+			noseConeAndShoulder(aftradius, length, thickness, 
+						aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "ParabolicSeries");
 		}
 		// HaackSeries
 		if(shape.equals("haackseries")) {
-			noseConeHaackSeriesAndShoulder(aftradius, length, thickness, 
-						aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f);
+			noseConeAndShoulder(aftradius, length, thickness, 
+						aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "HaackSeries");
 		}		
 	}
 
@@ -883,54 +889,14 @@ public class OpenRocketToOpenScad {
 		// innerradius
 	}
 	
-	private static void noseConeConicalAndShoulder(float aftradius, float length, float thickness, 
-			float aftshoulderradius, float aftshoulderlength, float aftshoulderthickness) {
+	private static void noseConeAndShoulder(float aftradius, float length, float thickness, 
+			float aftshoulderradius, float aftshoulderlength, float aftshoulderthickness, float n, String type) {
 		DecimalFormat df = new DecimalFormat("0.00");
 		Charset charset = StandardCharsets.UTF_8;
 
 		String content="";
 		try {
-			Path inPath = Paths.get("OpenScadTempales\\noiseCone-Conical.scad");
-			
-			content = new String(Files.readAllBytes(inPath), charset);
-			content = content.replaceAll("##aftradius##", df.format(aftradius));
-			content = content.replaceAll("##length##", df.format(length));
-			content = content.replaceAll("##thickness##", df.format(thickness));
-			content = content.replaceAll("##aftshoulderradius##", df.format(aftshoulderradius));
-			content = content.replaceAll("##aftshoulderlength##", df.format(aftshoulderlength));
-			content = content.replaceAll("##aftshoulderthickness##", df.format(aftshoulderthickness));
-			
-			Path outPath = Paths.get("e:\\noiseCone-Conical3D.scad");
-			Files.write(outPath, content.getBytes(charset));
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-	}
-	/*private static void noseConeConical(float aftradius, float length, float thickness) {
-		String fileContent3D = "";
-		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
-		DecimalFormat df = new DecimalFormat("0.00");
-		
-		fileContent3D = fileContent3D + "difference() {\n";
-		fileContent3D = fileContent3D + "cylinder(r1 = " + df.format(aftradius) + ", r2 =0, h =" +df.format(length)+ ");";
-		fileContent3D = fileContent3D + "translate([0,0, - thickness]) cylinder(r1 = " + df.format(aftradius- thickness) + ", r2 =0, h =" +df.format(length)+ ", $fn=200);";
-		fileContent3D = fileContent3D + "}\n";
-		writeFile(fileName3D, fileContent3D);
-	}*/
-	
-	private static void noseConeOgiveAndShoulder(float aftradius, float length, float thickness, 
-			float aftshoulderradius, float aftshoulderlength, float aftshoulderthickness, float n) {
-		DecimalFormat df = new DecimalFormat("0.00");
-		Charset charset = StandardCharsets.UTF_8;
-
-		String content="";
-		try {
-			Path currentRelativePath = Paths.get("");
-			Path inPath = Paths.get(currentRelativePath.toAbsolutePath().toString() + "\\OpenScadTempales\\noiseCone-Ogive.scad");
+			Path inPath = Paths.get("OpenScadTempales\\noiseCone-"+ type + ".scad");
 			
 			content = new String(Files.readAllBytes(inPath), charset);
 			content = content.replaceAll("##aftradius##", df.format(aftradius));
@@ -941,64 +907,7 @@ public class OpenRocketToOpenScad {
 			content = content.replaceAll("##aftshoulderthickness##", df.format(aftshoulderthickness));
 			content = content.replaceAll("##N##", df.format(n));
 			
-			Path outPath = Paths.get("e:\\noiseCone-Ogive3D.scad");
-			Files.write(outPath, content.getBytes(charset));
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-	}
-	/*private static void noseConeOgive(float aftradius, float length, float thickness) {
-		String fileContent3D = "";
-		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
-		DecimalFormat df = new DecimalFormat("0.00");
-		
-		//fileContent3D = "L= "+ df.format(length) + ";\nR=" + df.format(aftradius) + ";\nnof=30;" ;
-		
-		fileContent3D = fileContent3D + "module ogive(L,R) { \n ";
-		fileContent3D = fileContent3D  + "nof=L/2;\n" ;
-		fileContent3D = fileContent3D + "	phi = (pow(R,2) + pow(L,2))/ (2*R);\n ";
-		fileContent3D = fileContent3D + "	$fn=100;\nH2=L/nof;\nx1= 0;\nx2=0;\nA1=0;\nA2= 0;\n";
-		fileContent3D = fileContent3D + "	for (i=[1:nof]) {\n";
-		fileContent3D = fileContent3D + "		assign(x1 = ((L/nof)*(i-1)),\n";
-		fileContent3D = fileContent3D + "		x2 = ((L/nof)*i),\n";
-		fileContent3D = fileContent3D + "		A1= sqrt(pow(phi,2) - pow((L - ((L/nof)*(i-1))), 2) ) + (R - phi),\n";
-		fileContent3D = fileContent3D + "		A2= sqrt(pow(phi,2) - pow((L - ((L/nof)*i)), 2) ) + (R - phi),\n";
-		fileContent3D = fileContent3D + "		H1= (L/nof)*i)\n";
-		fileContent3D = fileContent3D + "		{\n";
-		fileContent3D = fileContent3D + "			translate ([0,0, L- H1]) cylinder (r1 = A2, r2 = A1 , h= H2);\n";
-		fileContent3D = fileContent3D + "		}\n";
-		fileContent3D = fileContent3D + "	}\n";
-		fileContent3D = fileContent3D + "}\n";
-		fileContent3D = fileContent3D + "difference() {\n";
-		fileContent3D = fileContent3D + "ogive("+df.format(length)+","+df.format(aftradius) +");\n";
-		fileContent3D = fileContent3D + "translate([0,0,-"+thickness +"])ogive(" +df.format(length)+","+df.format(aftradius-thickness) +");\n";
-		fileContent3D = fileContent3D + "}\n";
-		writeFile(fileName3D, fileContent3D);
-	}*/
-	
-	private static void noseConeEllipsoidAndShoulder(float aftradius, float length, float thickness, 
-			float aftshoulderradius, float aftshoulderlength, float aftshoulderthickness, float n) {
-		DecimalFormat df = new DecimalFormat("0.00");
-		Charset charset = StandardCharsets.UTF_8;
-
-		String content="";
-		try {
-			Path inPath = Paths.get("OpenScadTempales\\noiseCone-Ellipsoid.scad");
-			
-			content = new String(Files.readAllBytes(inPath), charset);
-			content = content.replaceAll("##aftradius##", df.format(aftradius));
-			content = content.replaceAll("##length##", df.format(length));
-			content = content.replaceAll("##thickness##", df.format(thickness));
-			content = content.replaceAll("##aftshoulderradius##", df.format(aftshoulderradius));
-			content = content.replaceAll("##aftshoulderlength##", df.format(aftshoulderlength));
-			content = content.replaceAll("##aftshoulderthickness##", df.format(aftshoulderthickness));
-			content = content.replaceAll("##N##", df.format(n));
-			
-			Path outPath = Paths.get("e:\\noiseCone-Ellipsoid3D.scad");
+			Path outPath = Paths.get("noiseCone-" + type + "3D.scad");
 			Files.write(outPath, content.getBytes(charset));
 			
 		} catch (IOException e) {
@@ -1006,155 +915,8 @@ public class OpenRocketToOpenScad {
 			e.printStackTrace();
 		}
 	}
-	/*private static void noseConeEllipsoid(float aftradius, float length, float thickness) {
-		String fileContent3D = "";
-		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
-		DecimalFormat df = new DecimalFormat("0.00");
-		
-		fileContent3D = fileContent3D + "module ogive(L,R) { \n ";
-		fileContent3D = fileContent3D  + "nof=L/2;\n" ;
-		fileContent3D = fileContent3D + "	$fn=100;\nH2=L/nof;\nx1= 0;\nx2=0;\nA1=0;\nA2= 0;\n";
-		fileContent3D = fileContent3D + "	for (i=[1:nof]) {\n";
-		fileContent3D = fileContent3D + "		assign(x1 = ((L/nof)*(i-1)),\n";
-		fileContent3D = fileContent3D + "		x2 = ((L/nof)*i),\n";
-		fileContent3D = fileContent3D + "		A1 = R * sqrt(1 - (pow(((L/nof)*(i-1)), 2) / pow(L,2))),\n";
-		fileContent3D = fileContent3D + "		A2 = R * sqrt(1 - (pow(((L/nof)*i), 2) / pow(L,2))),\n";
-		fileContent3D = fileContent3D + "		H1= (L/nof)*i)\n";
-		fileContent3D = fileContent3D + "		{\n";
-		fileContent3D = fileContent3D + "			translate ([0,0, L- H1]) cylinder (r1 = A2, r2 = A1 , h= H2);\n";
-		fileContent3D = fileContent3D + "		}\n";
-		fileContent3D = fileContent3D + "	}\n";
-		fileContent3D = fileContent3D + "}\n";
-		fileContent3D = fileContent3D + "difference() {\n";
-		fileContent3D = fileContent3D + "ogive("+df.format(length)+","+df.format(aftradius) +");\n";
-		fileContent3D = fileContent3D + "translate([0,0,-"+thickness +"])ogive(" +df.format(length)+","+df.format(aftradius-thickness) +");\n";
-		fileContent3D = fileContent3D + "}\n";
-		writeFile(fileName3D, fileContent3D);
-	}*/
-	
-	private static void noseConePowerSeriesAndShoulder(float aftradius, float length, float thickness, 
-			float aftshoulderradius, float aftshoulderlength, float aftshoulderthickness, float n) {
-		DecimalFormat df = new DecimalFormat("0.00");
-		Charset charset = StandardCharsets.UTF_8;
 
-		String content="";
-		try {
-			Path inPath = Paths.get("OpenScadTempales\\noiseCone-PowerSeries.scad");
-			
-			content = new String(Files.readAllBytes(inPath), charset);
-			content = content.replaceAll("##aftradius##", df.format(aftradius));
-			content = content.replaceAll("##length##", df.format(length));
-			content = content.replaceAll("##thickness##", df.format(thickness));
-			content = content.replaceAll("##aftshoulderradius##", df.format(aftshoulderradius));
-			content = content.replaceAll("##aftshoulderlength##", df.format(aftshoulderlength));
-			content = content.replaceAll("##aftshoulderthickness##", df.format(aftshoulderthickness));
-			content = content.replaceAll("##N##", df.format(n));
-			
-			Path outPath = Paths.get("e:\\noiseCone-PowerSeries3D.scad");
-			Files.write(outPath, content.getBytes(charset));
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 	
-	/*private static void noseConePowerSeries(float aftradius, float length, float thickness) {
-		String fileContent3D = "";
-		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
-		DecimalFormat df = new DecimalFormat("0.00");
-		
-		fileContent3D = fileContent3D + "module ogive(L,R,n) { \n ";
-		fileContent3D = fileContent3D  + "nof=L/2;\n" ;
-		fileContent3D = fileContent3D + "	$fn=100;\nH2=L/nof;\n";
-		fileContent3D = fileContent3D + "	for (i=[1:nof]) {\n";
-		fileContent3D = fileContent3D + "		assign(A1 = R* pow(((L/nof)*(i-1)/L),n),\n";
-		fileContent3D = fileContent3D + "		A2 = R* pow(((L/nof)*(i)/L),n),\n";
-		fileContent3D = fileContent3D + "		H1= (L/nof)*i)\n";
-		fileContent3D = fileContent3D + "		{\n";
-		fileContent3D = fileContent3D + "			translate ([0,0, L- H1]) cylinder (r1 = A2, r2 = A1 , h= H2);\n";
-		fileContent3D = fileContent3D + "		}\n";
-		fileContent3D = fileContent3D + "	}\n";
-		fileContent3D = fileContent3D + "}\n";
-		fileContent3D = fileContent3D + "difference() {\n";
-		fileContent3D = fileContent3D + "ogive("+df.format(length)+","+df.format(aftradius) +",0.3);\n";
-		fileContent3D = fileContent3D + "translate([0,0,-"+thickness +"])ogive(" +df.format(length)+","+df.format(aftradius-thickness) +",0.3);\n";
-		fileContent3D = fileContent3D + "}\n";
-		writeFile(fileName3D, fileContent3D);
-	}*/
-
-	private static void noseConeParabolicSeriesAndShoulder(float aftradius, float length, float thickness, 
-			float aftshoulderradius, float aftshoulderlength, float aftshoulderthickness, float n) {
-		DecimalFormat df = new DecimalFormat("0.00");
-		Charset charset = StandardCharsets.UTF_8;
-
-		String content="";
-		try {
-			Path inPath = Paths.get("OpenScadTempales\\noiseCone-ParabolicSeries.scad");
-			
-			content = new String(Files.readAllBytes(inPath), charset);
-			content = content.replaceAll("##aftradius##", df.format(aftradius));
-			content = content.replaceAll("##length##", df.format(length));
-			content = content.replaceAll("##thickness##", df.format(thickness));
-			content = content.replaceAll("##aftshoulderradius##", df.format(aftshoulderradius));
-			content = content.replaceAll("##aftshoulderlength##", df.format(aftshoulderlength));
-			content = content.replaceAll("##aftshoulderthickness##", df.format(aftshoulderthickness));
-			content = content.replaceAll("##N##", df.format(n));
-			
-			Path outPath = Paths.get("e:\\noiseCone-ParabolicSeries.scad");
-			Files.write(outPath, content.getBytes(charset));
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	/*private static void noseConeParabolicSeries(float aftradius, float length, float thickness) {
-		String fileContent3D = "";
-		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
-		DecimalFormat df = new DecimalFormat("0.00");
-		
-		fileContent3D = fileContent3D + "difference() {\n";
-		fileContent3D = fileContent3D + "}\n";
-		writeFile(fileName3D, fileContent3D);
-	}*/
-	
-	private static void noseConeHaackSeriesAndShoulder(float aftradius, float length, float thickness, 
-			float aftshoulderradius, float aftshoulderlength, float aftshoulderthickness, float n) {
-		DecimalFormat df = new DecimalFormat("0.00");
-		Charset charset = StandardCharsets.UTF_8;
-
-		String content="";
-		try {
-			Path inPath = Paths.get("OpenScadTempales\\noiseCone-HaackSeries.scad");
-			
-			content = new String(Files.readAllBytes(inPath), charset);
-			content = content.replaceAll("##aftradius##", df.format(aftradius));
-			content = content.replaceAll("##length##", df.format(length));
-			content = content.replaceAll("##thickness##", df.format(thickness));
-			content = content.replaceAll("##aftshoulderradius##", df.format(aftshoulderradius));
-			content = content.replaceAll("##aftshoulderlength##", df.format(aftshoulderlength));
-			content = content.replaceAll("##aftshoulderthickness##", df.format(aftshoulderthickness));
-			content = content.replaceAll("##N##", df.format(n));
-			
-			Path outPath = Paths.get("e:\\noiseCone-Haack3D.scad");
-			Files.write(outPath, content.getBytes(charset));
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	/*private static void noseConeHaackSeries(float aftradius, float length, float thickness) {
-		String fileContent3D = "";
-		String fileName3D = outPath + "noiseCone-3d" + noiseConeCount + ".scad";
-		DecimalFormat df = new DecimalFormat("0.00");
-		
-		fileContent3D = fileContent3D + "difference() {\n";
-		fileContent3D = fileContent3D + "}\n";
-		writeFile(fileName3D, fileContent3D);
-	}*/
 	private static void unzip(String zipFilePath, String destDir) {
         File dir = new File(destDir);
         // create output directory if it doesn't exist

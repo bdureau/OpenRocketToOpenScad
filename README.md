@@ -1,15 +1,39 @@
-# OpenRocketToOpenScad
-This is a command line Java program that allow converting OpenRocket files to OpenScad.
-First you need to change the extension of your ork file to zip.
-Then unzip it.
-Get the rocket.ork file and run the following from command line
-java -jar OpenRocketToOpenScad.jar rocket.ork
+# ORKtoSCAD
 
-This will extract all components to separate OpenScad files. Those can then be converted to SVG or STL files and used for your CNC router or 3D printer.
- 
-Currently supported components are:
-bulkhead
-freeformfinset
-trapezoidfinset
-centeringring
-ellipticalfinset
+ORKtoSCAD is a Java-based command-line program that converts OpenRocket files (.ork) into OpenSCAD (.scad) files. The program extracts components from the .ork file and generates corresponding OpenSCAD files, which can be further converted to SVG or STL files for use with CNC routers or 3D printers.
+
+## Features
+
+- **Bulkhead**
+- **Freeform Finset**
+- **Trapezoid Finset**
+- **Centering Ring**
+- **Elliptical Finset**
+- **Nose Cone**
+- **Body Tube**
+- **Tube Coupler**
+- **Inner Tube**
+
+## Prerequisites
+
+- Java Development Kit (JDK) installed.
+- Basic knowledge of command line operations.
+- An OpenRocket (.ork) file.
+
+## How to Use
+
+To run the program and convert an OpenRocket file to OpenSCAD:
+
+1. **Open the command line** and navigate to the main directory containing the `orkToScad.jar` file.
+
+2. **Run the JAR file** with the following command:
+    ```
+    java -jar orkToScad.jar
+    ```
+
+3. **Follow the prompts** to select the input `.ork` file and specify the output directory. You can also choose whether to keep the intermediate folder created during the extraction process.
+
+
+## Development & Contributing
+
+See the [docs](docs/README.md) for how to get started with development.

@@ -1,57 +1,50 @@
 package orkToScad;
 
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.Element;
 
-public class NodeProcessor {
-    private static int DEPTH_XML = 0;
+/** Walks the OpenRocket XML tree and hands every supported component to the {@link ScadGenerator}. */
+public final class NodeProcessor {
 
-    public static void printNode(NodeList nodeList, int level, String outPath) {
-        level++;
+    private final ScadGenerator generator;
 
-        if (nodeList != null && nodeList.getLength() > 0) {
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                Node node = nodeList.item(i);
-                System.out.println("NodeName:" + node.getNodeName());
+    public NodeProcessor(ScadGenerator generator) {
+        this.generator = generator;
+    }
 
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    switch (node.getNodeName()) {
-                        case "nosecone":
-                            ScadGenerator.nodeNoseCone(node, outPath);
-                            break;
-                        case "bodytube":
-                            ScadGenerator.bodyTubeIner = ScadGenerator.nodeBodyTube(node, outPath);
-                            break;
-                        case "tubecoupler":
-                            ScadGenerator.nodeTubeCoupler(node, ScadGenerator.bodyTubeIner, outPath);
-                            break;
-                        case "freeformfinset":
-                            ScadGenerator.nodeFreeFormFinset(node, outPath);
-                            break;
-                        case "ellipticalfinset":
-                            ScadGenerator.nodeEllipticalFinset(node, outPath);
-                            break;
-                        case "trapezoidfinset":
-                            ScadGenerator.nodeTrapezoidFinset(node, outPath);
-                            break;
-                        case "centeringring":
-                            ScadGenerator.nodeCenteringRing(node, outPath);
-                            break;
-                        case "bulkhead":
-                            ScadGenerator.nodeBulkhead(node, outPath);
-                            break;
-                        case "innertube":
-                            ScadGenerator.nodeInnerTube(node, outPath);
-                            break;
-                        default:
-                            break;
-                    }
-                    printNode(node.getChildNodes(), level, outPath);
-                    if (level > DEPTH_XML) {
-                        DEPTH_XML = level;
-                    }
-                }
+    public void process(Element element) {
+        for (Element child : OrkValues.elements(element)) {
+            switch (child.getNodeName()) {
+                case "nosecone":
+                    generator.noseCone(child);
+                    break;
+                case "bodytube":
+                    generator.bodyTube(child);
+                    break;
+                case "tubecoupler":
+                    generator.tubeCoupler(child);
+                    break;
+                case "freeformfinset":
+                    generator.freeformFinset(child);
+                    break;
+                case "ellipticalfinset":
+                    generator.ellipticalFinset(child);
+                    break;
+                case "trapezoidfinset":
+                    generator.trapezoidFinset(child);
+                    break;
+                case "centeringring":
+                    generator.centeringRing(child);
+                    break;
+                case "bulkhead":
+                    generator.bulkhead(child);
+                    break;
+                case "innertube":
+                    generator.innerTube(child);
+                    break;
+                default:
+                    break;
             }
+            process(child);
         }
     }
 }

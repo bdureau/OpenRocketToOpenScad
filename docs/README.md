@@ -1,35 +1,74 @@
-# Building and Running the ORKtoSCAD Java Application
+# Building ORKtoSCAD
 
 ## Prerequisites
-- Java Development Kit (JDK) installed.
-- Basic knowledge of command line operations.
 
-## Steps to Build and Run
+- JDK 16 or newer (`javac` and `jar` on the `PATH`).
 
-### Step 1: Compile Your Java Files
+## Build
 
-Navigate to your project directory (where the `src` folder is located) and compile your Java files using the `javac` command:
+Run these commands from the project root (the folder that contains `src/` and `openscad/`).
 
+### 1. Compile
+
+Linux / macOS:
 ```
-javac -d bin src/orkToScad/*.java
-```
-
-This will compile the Java files and place the .class files in a bin directory.
-
-### Step 2: Package into a JAR File
-
-Use the jar command to create a JAR file. Run the following command from your project directory:
-
-```
-jar cfm orkToScad.jar manifest.txt -C bin .
+rm -rf bin && mkdir bin
+javac --release 16 -d bin src/module-info.java src/orkToScad/*.java
 ```
 
-This command creates a JAR file named orkToScad.jar, includes the manifest file, and packages all the .class files from the bin directory.
+Windows (PowerShell):
+```
+Remove-Item -Recurse -Force bin -ErrorAction SilentlyContinue; New-Item -ItemType Directory bin | Out-Null
+javac --release 16 -d bin src/module-info.java (Get-ChildItem src/orkToScad/*.java)
+```
 
-### Step 3: Run the JAR File
+### 2. Package
 
-Run your JAR file and make sure everything is working correctly:
+```
+jar cfm orkToScad.jar manifest.txt -C bin . openscad
+```
+
+The trailing `openscad` argument bundles the nose cone template inside the jar. Without it,
+`.scad` nose cones can only be generated if an `openscad/` folder sits next to the jar or in the
+current directory.
+
+Check the content if needed:
+```
+jar tf orkToScad.jar
+```
+It must list `orkToScad/*.class` and `openscad/noseCone.scad`.
+
+### 3. Run
 
 ```
 java -jar orkToScad.jar
 ```
+
+## Running from Eclipse
+
+The project files (`.project`, `.classpath`) are included. Run `orkToScad.Main` with the project
+root as working directory (Eclipse's default): the template is then read from `openscad/`.
+
+## Testing a conversion without the window
+
+`Converter` has no user interface, so it can be called from a test or a small program:
+
+```java
+// third argument: also write STL files
+ConversionReport report = Converter.convert(Paths.get("tests/simplerocket.ork"), Paths.get("out"), true);
+System.out.println(report.summary());
+```
+
+The `tests/` folder contains 170 sample designs in the three .ork formats (ZIP, GZIP, XML).
+To check the generated files, open them with OpenSCAD, or in batch:
+
+```
+openscad -o /tmp/check.csg out/body-tube-3d1.scad
+```
+
+To compare a Java STL with OpenSCAD's own render of the same part:
+
+```
+openscad -o /tmp/nose-openscad.stl out/noseCone-Ogive3D.scad
+```
+Both files should have the same volume and size (checked on all shapes during development).

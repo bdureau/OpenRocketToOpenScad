@@ -1,611 +1,393 @@
 package orkToScad;
 
-import org.w3c.dom.*;
-import java.text.DecimalFormat;
-import java.nio.file.*;
+import static orkToScad.FileUtils.fmt;
+import static orkToScad.OrkValues.elements;
+import static orkToScad.OrkValues.mm;
+import static orkToScad.OrkValues.mmOr;
+import static orkToScad.OrkValues.text;
+
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
-public class ScadGenerator {
-    private static DecimalFormat df = new DecimalFormat("0.00");
-    public static float bodyTubeIner = 0;
-    private static int bulkheadCount = 0;
-    private static int tubeCouplerCount = 0;
-    private static int bodyTubeCount = 0;
-    private static int noseConeCount = 0;
-    private static int innerTubeCount = 0;
-    private static int freeformfinsetCount = 0;
-    private static int ellipticalfinsetCount = 0;
-    private static int trapezoidfinsetCount = 0;
-    private static int centeringringCount = 0;
+import org.w3c.dom.Element;
 
-    public static void nodeBulkhead(Node node, String outPath) {
-        bulkheadCount++;
-        String fileName = outPath + "bulkhead-cnc" + bulkheadCount + ".scad";
-        String fileName3D = outPath + "bulkhead-3d" + bulkheadCount + ".scad";
-        String fileContent = "";
-        String fileContent3D = "";
-        float outerradius = 0;
-        float length = 0;
-        NodeList childNodesList = node.getChildNodes();
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("outerradius")) {
-                    try {
-                        outerradius = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        outerradius = 0;
-                        System.out.println("outerradius error");
-                    }
-                }
-                if (childNode.getNodeName().equals("length")) {
-                    try {
-                        length = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        length = 0;
-                        System.out.println("length error");
-                    }
-                }
-            }
-        }
-        fileContent = "circle(r=" + df.format(outerradius) + ", $fn=200);\n";
-        fileContent3D = "cylinder(r=" + df.format(outerradius) + ", h=" + df.format(length) + ", $fn=200);\n";
-        FileUtils.writeFile(fileName, fileContent);
-        FileUtils.writeFile(fileName3D, fileContent3D);
+/**
+ * Generates one or more .scad files per OpenRocket component and, optionally, STL files for the
+ * parts that are printed in 3D (nose cones, body tubes, inner tubes, tube couplers, centering rings).
+ *
+ * Nose cones use the single template {@code openscad/noseCone.scad} (rotate_extrude, OpenRocket
+ * formulas and shape parameter). Other parts keep the OpenSCAD code of the previous version. Notes:
+ * <ul>
+ * <li>numbers are always written with '.' as decimal separator;</li>
+ * <li>"auto" dimensions are resolved (see {@link OrkValues});</li>
+ * <li>a component whose required dimensions are missing or invalid is skipped with a warning
+ *     instead of being written with zeros;</li>
+ * <li>I/O errors are recorded in the {@link ConversionReport} instead of being printed and ignored.</li>
+ * </ul>
+ */
+public final class ScadGenerator {
+
+    /** Nose cone shapes supported (OpenRocket name to output file name suffix). */
+    private static final Map<String, String> NOSE_CONE_TEMPLATES = Map.of(
+            "conical", "Conical",
+            "ogive", "Ogive",
+            "ellipsoid", "Ellipsoid",
+            "powerseries", "PowerSeries",
+            "parabolicseries", "ParabolicSeries",
+            "haackseries", "HaackSeries");
+
+    private final Path outDir;
+    private final ConversionReport report;
+    private final boolean stl;
+
+    private int bulkheadCount;
+    private int tubeCouplerCount;
+    private int bodyTubeCount;
+    private int innerTubeCount;
+    private int freeformfinsetCount;
+    private int ellipticalfinsetCount;
+    private int trapezoidfinsetCount;
+    private int centeringringCount;
+
+    /**
+     * @param stl also write a ready-to-print STL file next to the .scad file for nose cones,
+     *            body tubes, inner tubes, tube couplers and centering rings
+     */
+    public ScadGenerator(Path outDir, ConversionReport report, boolean stl) {
+        this.outDir = outDir;
+        this.report = report;
+        this.stl = stl;
     }
 
-    public static void nodeTubeCoupler(Node node, float bodyTubeIner, String outPath) {
-        tubeCouplerCount++;
-        String fileName3D = outPath + "tube-coupler-3d" + tubeCouplerCount + ".scad";
-        String fileContent3D = "";
-        float length = 0;
-        float outerradius = 0;
-        float thickness = 0;
-        NodeList childNodesList = node.getChildNodes();
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("outerradius")) {
-                    if (childNode.getTextContent().equals("auto")) {
-                        outerradius = bodyTubeIner;
-                    } else {
-                        try {
-                            outerradius = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                        } catch (NumberFormatException e) {
-                            outerradius = 0;
-                            System.out.println("outerradius error");
-                        }
-                    }
-                }
-                if (childNode.getNodeName().equals("length")) {
-                    try {
-                        length = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        length = 0;
-                        System.out.println("length error");
-                    }
-                }
-                if (childNode.getNodeName().equals("thickness")) {
-                    try {
-                        thickness = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        thickness = 0;
-                        System.out.println("thickness error");
-                    }
-                }
-            }
+    // ------------------------------------------------------------------ components
+
+    public void bulkhead(Element e) {
+        int n = ++bulkheadCount;
+        double r = OrkValues.outerRadiusInsideParent(e, "outerradius");
+        double length = mm(e, "length");
+        if (!require(e, "outerradius", r) || !require(e, "length", length)) {
+            return;
         }
-        fileContent3D = "difference() {\n";
-        fileContent3D += "cylinder(r=" + df.format(outerradius) + ", h=" + df.format(length) + ", $fn=200);\n";
-        fileContent3D += "cylinder(r=" + df.format(outerradius - thickness) + ", h=" + df.format(length)
-                + ", $fn=200);\n";
-        fileContent3D += "}";
-        FileUtils.writeFile(fileName3D, fileContent3D);
+        write("bulkhead-cnc" + n + ".scad", "circle(r=" + fmt(r) + ", $fn=200);\n");
+        write("bulkhead-3d" + n + ".scad", "cylinder(r=" + fmt(r) + ", h=" + fmt(length) + ", $fn=200);\n");
     }
 
-    public static float nodeBodyTube(Node node, String outPath) {
-        bodyTubeCount++;
-        String fileName3D = outPath + "body-tube-3d" + bodyTubeCount + ".scad";
-        String fileContent3D = "";
-        float length = 0;
-        float outerradius = 0;
-        float thickness = 0;
-        NodeList childNodesList = node.getChildNodes();
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("radius")) {
-                    try {
-                        outerradius = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        outerradius = 0;
-                        System.out.println("outerradius error");
-                    }
-                }
-                if (childNode.getNodeName().equals("length")) {
-                    try {
-                        length = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        length = 0;
-                        System.out.println("length error");
-                    }
-                }
-                if (childNode.getNodeName().equals("thickness")) {
-                    try {
-                        thickness = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        thickness = 0;
-                        System.out.println("thickness error");
-                    }
-                }
-            }
+    public void tubeCoupler(Element e) {
+        int n = ++tubeCouplerCount;
+        double r = OrkValues.outerRadiusInsideParent(e, "outerradius");
+        double length = mm(e, "length");
+        double thickness = mm(e, "thickness");
+        if (!require(e, "outerradius", r) || !require(e, "length", length) || !require(e, "thickness", thickness)) {
+            return;
         }
-        fileContent3D = "difference() {\n";
-        fileContent3D += "cylinder(r=" + df.format(outerradius) + ", h=" + df.format(length) + ", $fn=200);\n";
-        fileContent3D += "cylinder(r=" + df.format(outerradius - thickness) + ", h=" + df.format(length)
-                + ", $fn=200);\n";
-        fileContent3D += "}";
-        FileUtils.writeFile(fileName3D, fileContent3D);
-        return outerradius - thickness;
+        write("tube-coupler-3d" + n + ".scad", tube(r, thickness, length));
+        writeStl(e, "tube-coupler-3d" + n + ".stl", RevolvedSolid.tubeProfile(r - thickness, r, length));
     }
 
-    public static void nodeInnerTube(Node node, String outPath) {
-        innerTubeCount++;
-        String fileName3D = outPath + "inner-tube-3d" + innerTubeCount + ".scad";
-        String fileContent3D = "";
-        float length = 0;
-        float outerradius = 0;
-        float thickness = 0;
-        NodeList childNodesList = node.getChildNodes();
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("outerradius")) {
-                    try {
-                        outerradius = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        outerradius = 0;
-                        System.out.println("outerradius error");
-                    }
-                }
-                if (childNode.getNodeName().equals("length")) {
-                    try {
-                        length = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        length = 0;
-                        System.out.println("length error");
-                    }
-                }
-                if (childNode.getNodeName().equals("thickness")) {
-                    try {
-                        thickness = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        thickness = 0;
-                        System.out.println("thickness error");
-                    }
-                }
-            }
+    public void bodyTube(Element e) {
+        int n = ++bodyTubeCount;
+        double r = OrkValues.bodyTubeRadius(e);
+        double length = mm(e, "length");
+        double thickness = mm(e, "thickness");
+        if (!require(e, "radius", r) || !require(e, "length", length) || !require(e, "thickness", thickness)) {
+            return;
         }
-        fileContent3D = "difference() {\n";
-        fileContent3D += "cylinder(r=" + df.format(outerradius) + ", h=" + df.format(length) + ", $fn=200);\n";
-        fileContent3D += "cylinder(r=" + df.format(outerradius - thickness) + ", h=" + df.format(length)
-                + ", $fn=200);\n";
-        fileContent3D += "}";
-        FileUtils.writeFile(fileName3D, fileContent3D);
+        write("body-tube-3d" + n + ".scad", tube(r, thickness, length));
+        writeStl(e, "body-tube-3d" + n + ".stl", RevolvedSolid.tubeProfile(r - thickness, r, length));
     }
 
-    public static void nodeNoseCone(Node node, String outPath) {
-        noseConeCount++;
-        String fileName3D = outPath + "nose-cone-3d" + noseConeCount + ".scad";
-        float length = 0;
-        float aftradius = 0;
-        float thickness = 0;
-        float aftshoulderradius = 0;
-        float aftshoulderlength = 0;
-        float aftshoulderthickness = 0;
-        String shape = "ogive";
-        NodeList childNodesList = node.getChildNodes();
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("aftradius")) {
-                    try {
-                        aftradius = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        aftradius = 0;
-                        System.out.println("aftradius error");
-                    }
-                }
-                if (childNode.getNodeName().equals("length")) {
-                    try {
-                        length = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        length = 0;
-                        System.out.println("length error");
-                    }
-                }
-                if (childNode.getNodeName().equals("thickness")) {
-                    try {
-                        thickness = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        thickness = 0;
-                        System.out.println("thickness error");
-                    }
-                }
-                if (childNode.getNodeName().equals("aftshoulderradius")) {
-                    try {
-                        aftshoulderradius = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        aftshoulderradius = 0;
-                        System.out.println("aftshoulderradius error");
-                    }
-                }
-                if (childNode.getNodeName().equals("aftshoulderlength")) {
-                    try {
-                        aftshoulderlength = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        aftshoulderlength = 0;
-                        System.out.println("aftshoulderlength error");
-                    }
-                }
-                if (childNode.getNodeName().equals("aftshoulderthickness")) {
-                    try {
-                        aftshoulderthickness = 1000.0f * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        aftshoulderthickness = 0;
-                        System.out.println("aftshoulderthickness error");
-                    }
-                }
-                if (childNode.getNodeName().equals("shape")) {
-                    shape = childNode.getTextContent();
-                }
-            }
+    public void innerTube(Element e) {
+        int n = ++innerTubeCount;
+        double r = mm(e, "outerradius");
+        double length = mm(e, "length");
+        double thickness = mm(e, "thickness");
+        if (!require(e, "outerradius", r) || !require(e, "length", length) || !require(e, "thickness", thickness)) {
+            return;
         }
-        switch (shape) {
-            case "conical":
-                noseConeAndShoulder(aftradius, length, thickness,
-                        aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "Conical", outPath);
-                break;
-            case "ogive":
-                noseConeAndShoulder(aftradius, length, thickness,
-                        aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "Ogive", outPath);
-                break;
-            case "ellipsoid":
-                noseConeAndShoulder(aftradius, length, thickness,
-                        aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "Ellipsoid", outPath);
-                break;
-            case "powerseries":
-                noseConeAndShoulder(aftradius, length, thickness,
-                        aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "PowerSeries", outPath);
-                break;
-            case "parabolicseries":
-                noseConeAndShoulder(aftradius, length, thickness,
-                        aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "ParabolicSeries", outPath);
-                break;
-            case "haackseries":
-                noseConeAndShoulder(aftradius, length, thickness,
-                        aftshoulderradius, aftshoulderlength, aftshoulderthickness, 0.3f, "HaackSeries", outPath);
-                break;
-        }
+        write("inner-tube-3d" + n + ".scad", tube(r, thickness, length));
+        writeStl(e, "inner-tube-3d" + n + ".stl", RevolvedSolid.tubeProfile(r - thickness, r, length));
     }
 
-    public static void nodeFreeFormFinset(Node node, String outPath) {
-        freeformfinsetCount++;
-        String fileName = outPath + "freeformfinset" + freeformfinsetCount + ".scad";
-        String fileContent = "";
-        float tabheight = 0;
-        float tablength = 0;
-        float tabposition = 0;
-        float rootchord = 0;
-        String tabposition_relativeto = "";
-        NodeList childNodesList = node.getChildNodes();
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("tabheight")) {
-                    try {
-                        tabheight = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tabheight = 0;
-                        System.out.println("tabheight error");
-                    }
-                }
-                if (childNode.getNodeName().equals("tablength")) {
-                    try {
-                        tablength = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tablength = 0;
-                        System.out.println("tablength error");
-                    }
-                }
-                if (childNode.getNodeName().equals("tabposition")) {
-                    try {
-                        tabposition = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tabposition = 0;
-                        System.out.println("tabposition error");
-                    }
-                    tabposition_relativeto = childNode.getAttributes().getNamedItem("relativeto").getTextContent();
-                }
-                if (childNode.getNodeName().equals("finpoints")) {
-                    fileContent = "polygon(points=[";
-                    NodeList subChildNodesList = childNode.getChildNodes();
-                    for (int b = 0; b < subChildNodesList.getLength(); b++) {
-                        Node subChildNode = subChildNodesList.item(b);
-                        if (subChildNode.getNodeType() == Node.ELEMENT_NODE) {
-                            Element element = (Element) subChildNode;
-                            float x = 0;
-                            try {
-                                x = 1000 * Float.parseFloat(element.getAttribute("x"));
-                            } catch (NumberFormatException e) {
-                                x = 0;
-                                System.out.println("x error");
-                            }
-                            float y = 0;
-                            try {
-                                y = 1000 * Float.parseFloat(element.getAttribute("y"));
-                            } catch (NumberFormatException e) {
-                                y = 0;
-                                System.out.println("y error");
-                            }
-                            if (b < subChildNodesList.getLength() - 2) {
-                                fileContent += "[" + x + "," + y + "],";
-                            } else {
-                                fileContent += "[" + x + "," + y + "]";
-                            }
-                            if (b == 1) {
-                                rootchord = x;
-                            }
-                        }
-                    }
-                    fileContent += "]);\n";
-                }
-            }
+    public void centeringRing(Element e) {
+        int n = ++centeringringCount;
+        double outer = OrkValues.outerRadiusInsideParent(e, "outerradius");
+        double length = mm(e, "length");
+        if (!require(e, "outerradius", outer)) {
+            return;
         }
-
-        if (tabposition_relativeto.equals("center")) {
-            fileContent += "translate([" + ((-rootchord / 2) + (tabposition) + (tablength / 2)) + ",0,0])";
+        double inner = OrkValues.centeringRingInnerRadius(e, outer);
+        if (!require(e, "innerradius", inner) || !require(e, "length", length)) {
+            return;
         }
-        fileContent += "polygon(points=[[" + 0 + ",0],[" + 0 + ",-" + tabheight + "],[" + tablength + ",-"
-                + tabheight + "],[" + tablength + ",-" + 0 + "]]);\n";
-
-        FileUtils.writeFile(fileName, fileContent);
+        if (inner >= outer) {
+            warn(e, "inner radius (" + fmt(inner) + " mm) is not smaller than outer radius (" + fmt(outer)
+                    + " mm), skipped");
+            return;
+        }
+        String cnc = "difference() {\n"
+                + "circle(r=" + fmt(outer) + ", $fn=200);\n"
+                + "circle(r=" + fmt(inner) + ", $fn=200);\n"
+                + "}\n";
+        String solid = "difference() {\n"
+                + "cylinder(r=" + fmt(outer) + ",h=" + fmt(length) + ", $fn=200);\n"
+                + "cylinder(r=" + fmt(inner) + ",h=" + fmt(length) + ", $fn=200);\n"
+                + "}\n";
+        write("centeringring-CNC" + n + ".scad", cnc);
+        write("centeringring-3d" + n + ".scad", solid);
+        writeStl(e, "centeringring-3d" + n + ".stl", RevolvedSolid.tubeProfile(inner, outer, length));
     }
 
-    public static void nodeEllipticalFinset(Node node, String outPath) {
-        ellipticalfinsetCount++;
-        String fileName = outPath + "ellipticalfinset" + ellipticalfinsetCount + ".scad";
-        String fileContent = "";
-        float tabheight = 0;
-        float tablength = 0;
-        float tabposition = 0;
-        float rootchord = 0;
-        float height = 0;
-        String tabposition_relativeto = "";
-        NodeList childNodesList = node.getChildNodes();
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("tabheight")) {
-                    try {
-                        tabheight = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tabheight = 0;
-                        System.out.println("tabheight error");
-                    }
-                }
-                if (childNode.getNodeName().equals("tablength")) {
-                    try {
-                        tablength = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tablength = 0;
-                        System.out.println("tablength error");
-                    }
-                }
-                if (childNode.getNodeName().equals("tabposition")) {
-                    try {
-                        tabposition = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tabposition = 0;
-                        System.out.println("tabposition error");
-                    }
-                    tabposition_relativeto = childNode.getAttributes().getNamedItem("relativeto").getTextContent();
-                }
-                if (childNode.getNodeName().equals("rootchord")) {
-                    try {
-                        rootchord = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        rootchord = 0;
-                        System.out.println("rootchord error");
-                    }
-                }
-                if (childNode.getNodeName().equals("height")) {
-                    try {
-                        height = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        height = 0;
-                        System.out.println("height error");
-                    }
-                }
-            }
+    public void noseCone(Element e) {
+        String shape = text(e, "shape");
+        if (shape == null) {
+            shape = "ogive";
         }
-        fileContent = "difference() {\n";
-        fileContent += "scale([1," + (2 * height / rootchord) + "])circle(d=" + rootchord + ",$fn=100);\n";
-        fileContent += "translate([0," + (height / 2) + ",0])square([" + rootchord + "," + height
-                + "],center =true);\n";
-        fileContent += "}\n";
-
-        if (tabposition_relativeto.equals("center")) {
-            fileContent += "translate([" + ((-rootchord / 2) + (tabposition) + (tablength / 2)) + ",0,0])";
+        String type = NOSE_CONE_TEMPLATES.get(shape);
+        if (type == null) {
+            warn(e, "nose cone shape '" + shape + "' is not supported, skipped");
+            return;
         }
-        fileContent += "polygon(points=[[" + 0 + ",0],[" + 0 + "," + tabheight + "],[" + tablength + ","
-                + tabheight + "],[" + tablength + "," + 0 + "]]);\n";
-
-        FileUtils.writeFile(fileName, fileContent);
-    }
-
-    public static void nodeTrapezoidFinset(Node node, String outPath) {
-        trapezoidfinsetCount++;
-        String fileName = outPath + "trapezoidfinset" + trapezoidfinsetCount + ".scad";
-        String fileContent = "";
-        float tabheight = 0;
-        float tablength = 0;
-        float tabposition = 0;
-        float rootchord = 0;
-        float tipchord = 0;
-        float sweeplength = 0;
-        float height = 0;
-        String tabposition_relativeto = "";
-        NodeList childNodesList = node.getChildNodes();
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("tabheight")) {
-                    try {
-                        tabheight = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tabheight = 0;
-                        System.out.println("tabheight error");
-                    }
-                }
-                if (childNode.getNodeName().equals("tablength")) {
-                    try {
-                        tablength = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tablength = 0;
-                        System.out.println("tablength error");
-                    }
-                }
-                if (childNode.getNodeName().equals("tabposition")) {
-                    try {
-                        tabposition = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tabposition = 0;
-                        System.out.println("tabposition error");
-                    }
-                    tabposition_relativeto = childNode.getAttributes().getNamedItem("relativeto").getTextContent();
-                }
-                if (childNode.getNodeName().equals("rootchord")) {
-                    try {
-                        rootchord = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        rootchord = 0;
-                        System.out.println("rootchord error");
-                    }
-                }
-                if (childNode.getNodeName().equals("tipchord")) {
-                    try {
-                        tipchord = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        tipchord = 0;
-                        System.out.println("tipchord error");
-                    }
-                }
-                if (childNode.getNodeName().equals("sweeplength")) {
-                    try {
-                        sweeplength = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        sweeplength = 0;
-                        System.out.println("sweeplength error");
-                    }
-                }
-                if (childNode.getNodeName().equals("height")) {
-                    try {
-                        height = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        height = 0;
-                        System.out.println("height error");
-                    }
-                }
-            }
+        double length = mm(e, "length");
+        double aftRadius = OrkValues.noseConeAftRadius(e);
+        // "filled" = solid nose cone, written as a wall thickness of 0
+        boolean filled = "filled".equals(text(e, "thickness"));
+        double thickness = filled ? 0.0 : mm(e, "thickness");
+        double shoulderRadius = OrkValues.noseConeShoulderRadius(e);
+        double shoulderLength = mmOr(e, "aftshoulderlength", 0.0);
+        double shoulderThickness = mmOr(e, "aftshoulderthickness", 0.0);
+        boolean capped = "true".equals(text(e, "aftshouldercapped"));
+        double param = parseOr(text(e, "shapeparameter"), Double.NaN);
+        if (!require(e, "length", length) || !require(e, "aftradius", aftRadius)
+                || !require(e, "thickness", thickness) || !require(e, "aftshoulderradius", shoulderRadius)
+                || !require(e, "aftshoulderlength", shoulderLength)
+                || !require(e, "aftshoulderthickness", shoulderThickness)) {
+            return;
         }
-        fileContent = "polygon(points=[[0,0],[" + rootchord + "," + 0 + "],[" + (tipchord + sweeplength) + ","
-                + height + "],[" + sweeplength + "," + height + "]]);\n";
-
-        if (tabposition_relativeto.equals("center")) {
-            fileContent += "translate([" + ((rootchord / 2) - (tablength / 2) - tabposition) + "," + 0 + "," + 0 + "])";
+        if (length <= 0 || aftRadius <= 0) {
+            warn(e, "length and aft radius must be positive, skipped");
+            return;
         }
-        fileContent += "polygon(points=[[" + tabposition + ",0],[" + tabposition + ",-" + tabheight + "],["
-                + (tablength + tabposition) + ",-" + tabheight + "],[" + (tablength + tabposition) + ",-" + 0
-                + "]]);\n";
+        NoseConeShape profile = new NoseConeShape(shape, length, aftRadius, param);
 
-        FileUtils.writeFile(fileName, fileContent);
-    }
-
-    public static void nodeCenteringRing(Node node, String outPath) {
-        centeringringCount++;
-        String fileName = outPath + "centeringring-CNC" + centeringringCount + ".scad";
-        String fileName3D = outPath + "centeringring-3d" + centeringringCount + ".scad";
-        String fileContent = "";
-        String fileContent3D = "";
-        NodeList childNodesList = node.getChildNodes();
-        float outerradius = 0;
-        float innerradius = 0;
-        float length = 0;
-        for (int a = 0; a < childNodesList.getLength(); a++) {
-            Node childNode = childNodesList.item(a);
-            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                if (childNode.getNodeName().equals("outerradius")) {
-                    try {
-                        outerradius = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        outerradius = 0;
-                        System.out.println("outerradius error");
-                    }
-                }
-                if (childNode.getNodeName().equals("innerradius")) {
-                    try {
-                        innerradius = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        innerradius = 0;
-                        System.out.println("innerradius error");
-                    }
-                }
-                if (childNode.getNodeName().equals("length")) {
-                    try {
-                        length = 1000 * Float.parseFloat(childNode.getTextContent());
-                    } catch (NumberFormatException e) {
-                        length = 0;
-                        System.out.println("length error");
-                    }
-                }
-            }
-        }
-        fileContent = "difference() {\n";
-        fileContent += "circle(r=" + df.format(outerradius) + ", $fn=200);\n";
-        fileContent += "circle(r=" + df.format(innerradius) + ", $fn=200);\n";
-        fileContent += "}\n";
-
-        fileContent3D = "difference() {\n";
-        fileContent3D += "cylinder(r=" + df.format(outerradius) + ",h=" + df.format(length) + ", $fn=200);\n";
-        fileContent3D += "cylinder(r=" + df.format(innerradius) + ",h=" + df.format(length) + ", $fn=200);\n";
-        fileContent3D += "}\n";
-        FileUtils.writeFile(fileName, fileContent);
-        FileUtils.writeFile(fileName3D, fileContent3D);
-    }
-
-    private static void noseConeAndShoulder(float aftradius, float length, float thickness,
-            float aftshoulderradius, float aftshoulderlength, float aftshoulderthickness, float n, String type,
-            String outPath) {
-        Charset charset = StandardCharsets.UTF_8;
         String content;
         try {
-            Path inPath = Paths.get("openscad\\noseCone-" + type + ".scad");
-            content = new String(Files.readAllBytes(inPath), charset);
-            content = content.replaceAll("##aftradius##", df.format(aftradius));
-            content = content.replaceAll("##length##", df.format(length));
-            content = content.replaceAll("##thickness##", df.format(thickness));
-            content = content.replaceAll("##aftshoulderradius##", df.format(aftshoulderradius));
-            content = content.replaceAll("##aftshoulderlength##", df.format(aftshoulderlength));
-            content = content.replaceAll("##aftshoulderthickness##", df.format(aftshoulderthickness));
-            content = content.replaceAll("##N##", df.format(n));
+            content = FileUtils.loadTemplate("noseCone.scad");
+        } catch (IOException ex) {
+            report.error(ex.getMessage());
+            return;
+        }
+        content = fill(content, "##shape##", shape);
+        content = fill(content, "##aftradius##", fmt(aftRadius));
+        content = fill(content, "##length##", fmt(length));
+        content = fill(content, "##thickness##", fmt(thickness));
+        content = fill(content, "##shapeparameter##", fmtParam(profile.parameter()));
+        content = fill(content, "##aftshoulderradius##", fmt(shoulderRadius));
+        content = fill(content, "##aftshoulderlength##", fmt(shoulderLength));
+        content = fill(content, "##aftshoulderthickness##", fmt(shoulderThickness));
+        content = fill(content, "##aftshouldercapped##", capped ? "true" : "false");
+        write("noseCone-" + type + "3D.scad", content);
 
-            Path outFilePath = Paths.get(outPath + "noseCone-" + type + "3D.scad");
-            Files.write(outFilePath, content.getBytes(charset));
-        } catch (IOException e) {
-            e.printStackTrace();
+        // Same rounding as the .scad file, so both describe exactly the same part.
+        writeStl(e, "noseCone-" + type + "3D.stl", RevolvedSolid.noseConeProfile(
+                new NoseConeShape(shape, round2(length), round2(aftRadius), Double.parseDouble(fmtParam(profile.parameter()))),
+                round2(length), round2(aftRadius), round2(thickness),
+                round2(shoulderRadius), round2(shoulderLength), round2(shoulderThickness), capped));
+    }
+
+    public void freeformFinset(Element e) {
+        int n = ++freeformfinsetCount;
+        Element finpoints = OrkValues.child(e, "finpoints");
+        List<Element> points = finpoints == null ? List.of() : elements(finpoints);
+        if (points.size() < 3) {
+            warn(e, "free form fin set needs at least 3 points, skipped");
+            return;
+        }
+        StringBuilder sb = new StringBuilder("polygon(points=[");
+        float firstX = 0f;
+        for (int i = 0; i < points.size(); i++) {
+            Element p = points.get(i);
+            double x = mm(p.getAttribute("x"));
+            double y = mm(p.getAttribute("y"));
+            if (Double.isNaN(x) || Double.isNaN(y)) {
+                warn(e, "invalid fin point #" + (i + 1) + ", skipped");
+                return;
+            }
+            if (i == 0) {
+                firstX = (float) x;
+            }
+            sb.append('[').append((float) x).append(',').append((float) y).append(']');
+            if (i < points.size() - 1) {
+                sb.append(',');
+            }
+        }
+        sb.append("]);\n");
+
+        Tab tab = Tab.read(e);
+        if (tab == null) {
+            return;
+        }
+        if (tab.centered) {
+            sb.append("translate([").append(-firstX / 2 + tab.position + tab.length / 2).append(",0,0])");
+        }
+        sb.append("polygon(points=[[0,0],[0,-").append(tab.height).append("],[").append(tab.length)
+                .append(",-").append(tab.height).append("],[").append(tab.length).append(",-0]]);\n");
+        write("freeformfinset" + n + ".scad", sb.toString());
+    }
+
+    public void ellipticalFinset(Element e) {
+        int n = ++ellipticalfinsetCount;
+        float root = (float) mm(e, "rootchord");
+        float height = (float) mm(e, "height");
+        if (!require(e, "rootchord", root) || !require(e, "height", height)) {
+            return;
+        }
+        if (root <= 0f) {
+            warn(e, "root chord must be positive, skipped");
+            return;
+        }
+        Tab tab = Tab.read(e);
+        if (tab == null) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder("difference() {\n");
+        sb.append("scale([1,").append(2 * height / root).append("])circle(d=").append(root).append(",$fn=100);\n");
+        sb.append("translate([0,").append(height / 2).append(",0])square([").append(root).append(',').append(height)
+                .append("],center =true);\n");
+        sb.append("}\n");
+        if (tab.centered) {
+            sb.append("translate([").append(-root / 2 + tab.position + tab.length / 2).append(",0,0])");
+        }
+        sb.append("polygon(points=[[0,0],[0,").append(tab.height).append("],[").append(tab.length).append(',')
+                .append(tab.height).append("],[").append(tab.length).append(",0]]);\n");
+        write("ellipticalfinset" + n + ".scad", sb.toString());
+    }
+
+    public void trapezoidFinset(Element e) {
+        int n = ++trapezoidfinsetCount;
+        float root = (float) mm(e, "rootchord");
+        float tip = (float) mm(e, "tipchord");
+        float sweep = (float) mm(e, "sweeplength");
+        float height = (float) mm(e, "height");
+        if (!require(e, "rootchord", root) || !require(e, "tipchord", tip) || !require(e, "sweeplength", sweep)
+                || !require(e, "height", height)) {
+            return;
+        }
+        Tab tab = Tab.read(e);
+        if (tab == null) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("polygon(points=[[0,0],[").append(root).append(",0],[").append(tip + sweep).append(',')
+                .append(height).append("],[").append(sweep).append(',').append(height).append("]]);\n");
+        if (tab.centered) {
+            sb.append("translate([").append(root / 2 - tab.length / 2 - tab.position).append(",0,0])");
+        }
+        float p = tab.position;
+        sb.append("polygon(points=[[").append(p).append(",0],[").append(p).append(",-").append(tab.height)
+                .append("],[").append(tab.length + p).append(",-").append(tab.height).append("],[")
+                .append(tab.length + p).append(",-0]]);\n");
+        write("trapezoidfinset" + n + ".scad", sb.toString());
+    }
+
+    // ------------------------------------------------------------------ helpers
+
+    /** Fin tab (optional in OpenRocket: absent values mean "no tab"). */
+    private static final class Tab {
+        float height;
+        float length;
+        float position;
+        boolean centered;
+
+        /** Returns null (after the caller is warned through NaN checks) only if a value is present but invalid. */
+        static Tab read(Element finset) {
+            Tab t = new Tab();
+            double h = mmOr(finset, "tabheight", 0.0);
+            double l = mmOr(finset, "tablength", 0.0);
+            double p = mmOr(finset, "tabposition", 0.0);
+            if (Double.isNaN(h) || Double.isNaN(l) || Double.isNaN(p)) {
+                return null;
+            }
+            t.height = (float) h;
+            t.length = (float) l;
+            t.position = (float) p;
+            Element pos = OrkValues.child(finset, "tabposition");
+            String rel = pos == null ? "" : pos.getAttribute("relativeto"); // "" when attribute is absent
+            t.centered = rel.equals("center") || rel.equals("middle");
+            return t;
+        }
+    }
+
+    private static String tube(double r, double thickness, double length) {
+        return "difference() {\n"
+                + "cylinder(r=" + fmt(r) + ", h=" + fmt(length) + ", $fn=200);\n"
+                + "cylinder(r=" + fmt(r - thickness) + ", h=" + fmt(length) + ", $fn=200);\n"
+                + "}";
+    }
+
+    /** Shape parameters are small dimensionless numbers: keep more decimals than for lengths. */
+    private static String fmtParam(double p) {
+        return new java.text.DecimalFormat("0.0####", java.text.DecimalFormatSymbols.getInstance(java.util.Locale.ROOT))
+                .format(p);
+    }
+
+    private static double round2(double v) {
+        return Double.parseDouble(fmt(v));
+    }
+
+    private static double parseOr(String raw, double def) {
+        if (raw == null) {
+            return def;
+        }
+        try {
+            return Double.parseDouble(raw.trim());
+        } catch (NumberFormatException ex) {
+            return def;
+        }
+    }
+
+    /** Writes the STL version of a part (if enabled). Errors are reported, never thrown. */
+    private void writeStl(Element e, String fileName, java.awt.geom.Area profile) {
+        if (!stl) {
+            return;
+        }
+        Path file = outDir.resolve(fileName);
+        try {
+            RevolvedSolid.writeStl(profile, file, fileName);
+            report.generated(file);
+        } catch (IOException | RuntimeException ex) {
+            report.error("Cannot write " + file + ": " + ex.getMessage());
+        }
+    }
+
+    private static String fill(String template, String placeholder, String value) {
+        return template.replace(placeholder, value); // literal replacement, no regex
+    }
+
+    private boolean require(Element e, String what, double value) {
+        if (Double.isNaN(value)) {
+            String raw = text(e, what);
+            String reason = raw == null ? "is missing"
+                    : OrkValues.isAuto(raw) ? "is 'auto' and could not be resolved" : "is invalid ('" + raw + "')";
+            warn(e, what + " " + reason + ", skipped");
+            return false;
+        }
+        return true;
+    }
+
+    private void warn(Element e, String message) {
+        String name = text(e, "name");
+        report.warn("<" + e.getNodeName() + ">" + (name == null ? "" : " \"" + name + "\"") + ": " + message);
+    }
+
+    private void write(String fileName, String content) {
+        Path file = outDir.resolve(fileName);
+        try {
+            FileUtils.writeFile(file, content);
+            report.generated(file);
+        } catch (IOException ex) {
+            report.error("Cannot write " + file + ": " + ex.getMessage());
         }
     }
 }

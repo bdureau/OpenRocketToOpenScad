@@ -46,7 +46,7 @@ public final class StlMesh {
         if (text.stripLeading().startsWith("solid") && text.contains("vertex")) {
             return ascii(text);
         }
-        throw new IOException("Not a valid STL file: " + file.getFileName());
+        throw new I18n.LocalizedIOException(new I18n.Msg("stl.notValid", file.getFileName()));
     }
 
     private static StlMesh binary(ByteBuffer b, int n) {
@@ -70,7 +70,7 @@ public final class StlMesh {
             }
             String[] parts = s.split("\\s+");
             if (parts.length < 4) {
-                throw new IOException("Malformed STL vertex line: " + s);
+                throw new I18n.LocalizedIOException(new I18n.Msg("stl.malformed"));
             }
             if (count + 3 > v.length) {
                 v = java.util.Arrays.copyOf(v, v.length * 2);
@@ -80,11 +80,11 @@ public final class StlMesh {
                     v[count++] = Float.parseFloat(parts[k + 1]);
                 }
             } catch (NumberFormatException e) {
-                throw new IOException("Malformed STL vertex line: " + s, e);
+                throw new I18n.LocalizedIOException(new I18n.Msg("stl.malformed"), e);
             }
         }
         if (count == 0 || count % 9 != 0) {
-            throw new IOException("Malformed ASCII STL file");
+            throw new I18n.LocalizedIOException(new I18n.Msg("stl.malformed"));
         }
         return new StlMesh(java.util.Arrays.copyOf(v, count));
     }

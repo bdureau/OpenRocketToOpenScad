@@ -1,0 +1,136 @@
+<div class="cover">
+  <img src="{{icon}}" alt="">
+  <div>
+    <h1>ORKtoSCAD</h1>
+    <div class="sub">User manual &middot; version {{version}}</div>
+  </div>
+</div>
+
+<p class="lead">ORKtoSCAD turns a rocket designed with OpenRocket (<code>.ork</code> file) into files you can use to make its
+parts: 3D models to print, plans to cut with a laser or a CNC machine, and OpenSCAD models you can modify.</p>
+
+<h2><span class="n">1</span>What ORKtoSCAD makes</h2>
+<p>Each component of the design gives one or more files, all dimensioned in <b>millimetres</b>:</p>
+<table>
+  <tr><th>OpenRocket component</th><th class="c">STL (3D print)</th><th class="c">SVG (laser / CNC)</th><th class="c">OpenSCAD</th></tr>
+  <tr><td>Nose cone, transition</td><td class="c yes">&#10003;</td><td class="c no">&ndash;</td><td class="c yes">&#10003;</td></tr>
+  <tr><td>Body tube, tube coupler, inner tube, engine block</td><td class="c yes">&#10003;</td><td class="c no">&ndash;</td><td class="c yes">&#10003;</td></tr>
+  <tr><td>Centering ring</td><td class="c yes">&#10003;</td><td class="c yes">&#10003;</td><td class="c yes">&#10003;</td></tr>
+  <tr><td>Bulkhead</td><td class="c no">&ndash;</td><td class="c yes">&#10003;</td><td class="c yes">&#10003;</td></tr>
+  <tr><td>Trapezoidal, elliptical and free-form fins (one fin with its tab)</td><td class="c no">&ndash;</td><td class="c yes">&#10003;</td><td class="c yes">&#10003;</td></tr>
+  <tr><td>Tube fins, launch lug, rail button</td><td class="c yes">&#10003;</td><td class="c no">&ndash;</td><td class="c yes">&#10003;</td></tr>
+</table>
+<p>Parts inside pods and boosters are made in the same way. Parachutes, streamers, shock cords and mass
+components are not parts to print or cut: they are skipped, and the report says how many.</p>
+
+<h2><span class="n">2</span>Installing and starting</h2>
+<ul>
+  <li><b>Windows application</b>: open the <span class="file">ORKtoSCAD</span> folder and start
+    <span class="file">ORKtoSCAD.exe</span> (or use the Start menu shortcut if you used the installer).
+    Keep the whole folder together: it contains its own Java, so Java does not need to be installed.</li>
+  <li><b>Java version</b> (Windows, macOS, Linux): with Java 16 or newer installed, double-click
+    <span class="file">orkToScad.jar</span>, or type <code>java -jar orkToScad.jar</code>. You can add a
+    <code>.ork</code> file after it to convert it right away.</li>
+  <li><b>OpenSCAD</b> (optional, free, <i>openscad.org</i>) is only needed for the <span class="ui">Render</span>
+    tab and to modify or export the <code>.scad</code> files. STL and SVG files are written without it.</li>
+</ul>
+
+<h2><span class="n">3</span>The window</h2>
+<figure>
+  <img src="{{screenshot}}" alt="">
+</figure>
+<ol class="callouts">
+  <li><span class="num">1</span><span><span class="ui">Help</span> menu: this manual (<kbd>F1</kbd>) and information about the program.</span></li>
+  <li><span class="num">2</span><span>The OpenRocket file to convert. Type its path, use <span class="ui">Browse&hellip;</span>, or drop the file on the window.</span></li>
+  <li><span class="num">3</span><span>Output folder. A folder named <span class="file">&lt;design&gt;_out</span> next to the <code>.ork</code> file is proposed; <span class="ui">Browse&hellip;</span> chooses another one.</span></li>
+  <li><span class="num">4</span><span><span class="ui">STL</span> and <span class="ui">SVG</span>: also write the 3D files and the cutting plans. The <code>.scad</code> files are always written.</span></li>
+  <li><span class="num">5</span><span><span class="ui">Convert</span> starts the conversion.</span></li>
+  <li><span class="num">6</span><span><span class="ui">Open a folder&hellip;</span> shows the files of an earlier conversion, without converting again.</span></li>
+  <li><span class="num">7</span><span>Language of the program (see section 8).</span></li>
+  <li><span class="num">8</span><span>The parts, grouped by kind, with the files available for each (STL, SVG, SCAD) and the number of copies to make (&times;&nbsp;2&hellip;). The box at the top filters the list by name.</span></li>
+  <li><span class="num">9</span><span>3D view of the selected part (STL file).</span></li>
+  <li><span class="num">10</span><span>2D plan of the selected part (SVG file).</span></li>
+  <li><span class="num">11</span><span>OpenSCAD code of the part, or its render by OpenSCAD.</span></li>
+  <li><span class="num">12</span><span>Result of the last conversion. <span class="ui">Show the report</span> gives the details.</span></li>
+</ol>
+
+<h2><span class="n">4</span>Converting a design</h2>
+<ol class="steps">
+  <li>Save your design in OpenRocket. Files from all recent versions can be read, compressed or not.</li>
+  <li>Choose the <code>.ork</code> file with <span class="ui">Browse&hellip;</span> &mdash; or simply drop it on the window: the conversion then starts at once.</li>
+  <li>Check the output folder, and tick <span class="ui">STL</span> and/or <span class="ui">SVG</span>.</li>
+  <li>Click <span class="ui">Convert</span>. The status bar shows the number of files written, of warnings and of notes, and the parts appear in the list.</li>
+  <li>Click <span class="ui">Show the report</span> to read the list of files, the <b>warnings</b> (for example a part that was skipped because a dimension is missing) and the <b>notes</b> (number of copies to make, components that are not made).</li>
+</ol>
+<div class="note warn">Files that already exist in the output folder with the same name are replaced.</div>
+
+<h2><span class="n">5</span>The files</h2>
+<ul>
+  <li><b>Names</b>: kind of part and number in the order of the design, for example
+    <span class="file">body-tube-3d1.stl</span>, <span class="file">centeringring-CNC1.svg</span>,
+    <span class="file">noseCone-Ogive3D.scad</span>. <span class="file">3d</span> marks a 3D part,
+    <span class="file">CNC</span> a flat outline to cut.</li>
+  <li><b>.scad</b>: OpenSCAD model of the part, to open, modify or export with OpenSCAD.</li>
+  <li><b>.stl</b>: the same part as the <code>.scad</code> file, ready for a slicer. The aft end is at the bottom
+    (z&nbsp;=&nbsp;0) and the tip at the top; shoulders are included and joined to the wall.</li>
+  <li><b>.svg</b>: the cut outline at real size, as a thin red line (0.1&nbsp;mm) without fill: one closed outline for a fin and its tab, concentric circles for a ring or a bulkhead.</li>
+  <li><b>How many</b>: one file is written per part. When a part is needed several times (fin count, pods,
+    several rail buttons), the list shows &times;&nbsp;<i>n</i> and the report says how many to make.</li>
+  <li><b>&ldquo;auto&rdquo; dimensions</b>: dimensions left on <i>auto</i> in OpenRocket (radius of a tube,
+    of a ring&hellip;) are worked out the same way as OpenRocket does.</li>
+</ul>
+
+<h2><span class="n">6</span>Looking at the parts</h2>
+<p>Click a part in the list: its files are shown in the three boxes.</p>
+<h3>3D view</h3>
+<p>Drag to rotate, use the wheel to zoom, drag with the right button to move, double-click to come back to the
+initial view (<span class="ui">Reset view</span>). <span class="ui">Cutaway</span> cuts the part in half to show
+the wall thickness; inner faces are drawn in blue. The size of the part and its number of triangles are shown at the top.</p>
+<h3>2D plan</h3>
+<p>The cut line is drawn in red on a millimetre grid (<span class="ui">mm grid</span>), with the diameters of the
+circles or the size of the outline, and a scale bar. <span class="ui">Fit</span> shows the whole part; the wheel zooms.</p>
+<h3>OpenSCAD</h3>
+<p><span class="ui">Code</span> shows the coloured code with line numbers. When a part has several
+<code>.scad</code> files (a centering ring has a 2D and a 3D one), choose it in the list next to the tabs.
+<span class="ui">Render</span> shows the part as computed by OpenSCAD (this can take a few seconds).
+<span class="ui">Open in OpenSCAD</span> opens the file in the program associated with <code>.scad</code> files.</p>
+<div class="note">If OpenSCAD is installed but not found, click <span class="ui">Tell where it is installed&hellip;</span>
+at the bottom of the box and choose <span class="file">openscad.exe</span>. The choice is remembered.</div>
+
+<h2><span class="n">7</span>Making the parts</h2>
+<h3>3D printing</h3>
+<ul>
+  <li>Open the <code>.stl</code> files in your slicer (PrusaSlicer, Cura, Bambu Studio&hellip;); the unit is the millimetre.</li>
+  <li>Long body tubes are written in one piece: cut them in the slicer if they do not fit on your printer.</li>
+  <li>The screw hole of rail buttons is not modelled: drill it, or add it in OpenSCAD.</li>
+</ul>
+<h3>Laser or CNC cutting</h3>
+<ul>
+  <li>The SVG files are sized in millimetres and import at their real size in LightBurn, Inkscape, LaserGRBL&hellip;
+    Check that your software does not rescale them on import.</li>
+  <li>No kerf compensation is applied: set it in your laser or CAM software.</li>
+  <li>Fins: one fin per file, root chord at the bottom with its tab; cut the number of fins shown (&times;&nbsp;<i>n</i>).</li>
+</ul>
+
+<h2><span class="n">8</span>Language</h2>
+<p>The program starts in the language of your computer when it is one of the 11 available languages, and in English
+otherwise. Use the selector at the top right to choose another one: the window changes at once and keeps the
+loaded parts. <span class="ui">Automatic</span> goes back to the language of the computer. The choice is remembered.</p>
+
+<h2><span class="n">9</span>If something goes wrong</h2>
+<ul>
+  <li><b>A part is missing</b>: read the warnings in the report. A component whose size is <i>auto</i> with
+    nothing to take it from is skipped: give it a dimension in OpenRocket and convert again.</li>
+  <li><b>&ldquo;OpenSCAD not found&rdquo;</b>: install OpenSCAD, or show where it is (section 6). The code is always visible.</li>
+  <li><b>No STL or SVG for a part</b>: flat parts have no STL and 3D parts no SVG; otherwise tick the option and convert again.</li>
+  <li><b>The manual does not open</b>: a PDF reader must be installed.</li>
+</ul>
+
+<h2><span class="n">10</span>Contact</h2>
+<p>Questions, suggestions or a design that does not convert well: write to the author, with the version number
+and, if possible, the <code>.ork</code> file.</p>
+<div class="contact">
+  <div><span>Author</span><b>{{author}}</b></div>
+  <div><span>E-mail</span><a href="mailto:{{email}}">{{email}}</a></div>
+  <div><span>Version</span>{{version}}</div>
+</div>

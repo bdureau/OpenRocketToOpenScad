@@ -1,0 +1,137 @@
+<div class="cover">
+  <img src="{{icon}}" alt="">
+  <div>
+    <h1>ORKtoSCAD</h1>
+    <div class="sub">Benutzerhandbuch · Version {{version}}</div>
+  </div>
+</div>
+
+<p class="lead">ORKtoSCAD wandelt eine mit OpenRocket entworfene Rakete (<code>.ork</code>-Datei) in Dateien zum Bau
+ihrer Teile um: 3D-Modelle zum Drucken, Pläne zum Laser- oder CNC-Schneiden und OpenSCAD-Modelle, die Sie anpassen können.</p>
+
+<h2><span class="n">1</span>Was ORKtoSCAD erzeugt</h2>
+<p>Jede Komponente des Entwurfs ergibt eine oder mehrere Dateien, alle Maße in <b>Millimetern</b>:</p>
+<table>
+  <tr><th>OpenRocket-Komponente</th><th class="c">STL (3D-Druck)</th><th class="c">SVG (Laser / CNC)</th><th class="c">OpenSCAD</th></tr>
+  <tr><td>Spitze, Übergang</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Rumpfrohr, Kupplungsrohr, Innenrohr, Motoranschlag</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Zentrierring</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Schott</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Trapez-, Ellipsen- und Freiformflossen (eine Flosse mit Steg)</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Rohrflossen, Führungsröhrchen, Rail-Button</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+</table>
+<p>Teile in Pods und Boostern werden genauso behandelt. Fallschirme, Bremsbänder, Fangleinen und Massekomponenten
+sind keine Teile zum Drucken oder Schneiden: Sie werden übersprungen, und der Bericht nennt ihre Anzahl.</p>
+
+<h2><span class="n">2</span>Installation und Start</h2>
+<ul>
+  <li><b>Windows-Anwendung</b>: Öffnen Sie den Ordner <span class="file">ORKtoSCAD</span> und starten Sie
+    <span class="file">ORKtoSCAD.exe</span> (oder die Verknüpfung im Startmenü, wenn Sie das Installationsprogramm
+    verwendet haben). Lassen Sie den Ordner vollständig: Er enthält sein eigenes Java, daher muss Java nicht installiert sein.</li>
+  <li><b>Java-Version</b> (Windows, macOS, Linux): Bei installiertem Java 16 oder neuer doppelklicken Sie auf
+    <span class="file">orkToScad.jar</span> oder geben <code>java -jar orkToScad.jar</code> ein. Eine
+    angehängte <code>.ork</code>-Datei wird sofort konvertiert.</li>
+  <li><b>OpenSCAD</b> (optional, kostenlos, <i>openscad.org</i>) wird nur für den Reiter <span class="ui">Rendern</span>
+    und zum Bearbeiten oder Exportieren der <code>.scad</code>-Dateien benötigt. STL- und SVG-Dateien entstehen auch ohne.</li>
+</ul>
+
+<h2><span class="n">3</span>Das Fenster</h2>
+<figure>
+  <img src="{{screenshot}}" alt="">
+</figure>
+<ol class="callouts">
+  <li><span class="num">1</span><span>Menü <span class="ui">Hilfe</span>: dieses Handbuch (<kbd>F1</kbd>) und Informationen zum Programm.</span></li>
+  <li><span class="num">2</span><span>Die zu konvertierende OpenRocket-Datei. Pfad eingeben, <span class="ui">Durchsuchen…</span> verwenden oder die Datei auf das Fenster ziehen.</span></li>
+  <li><span class="num">3</span><span>Ausgabeordner. Vorgeschlagen wird ein Ordner <span class="file">&lt;Entwurf&gt;_out</span> neben der <code>.ork</code>-Datei; mit <span class="ui">Durchsuchen…</span> wählen Sie einen anderen.</span></li>
+  <li><span class="num">4</span><span><span class="ui">STL</span> und <span class="ui">SVG</span>: auch die 3D-Dateien und die Schneidpläne schreiben. Die <code>.scad</code>-Dateien werden immer geschrieben.</span></li>
+  <li><span class="num">5</span><span><span class="ui">Konvertieren</span> startet die Konvertierung.</span></li>
+  <li><span class="num">6</span><span><span class="ui">Ordner öffnen…</span> zeigt die Dateien einer früheren Konvertierung, ohne neu zu konvertieren.</span></li>
+  <li><span class="num">7</span><span>Sprache des Programms (siehe Abschnitt 8).</span></li>
+  <li><span class="num">8</span><span>Die Teile, nach Art gruppiert, mit den jeweils vorhandenen Dateien (STL, SVG, SCAD) und der Anzahl herzustellender Exemplare (×&nbsp;2…). Das Feld oben filtert die Liste nach Namen.</span></li>
+  <li><span class="num">9</span><span>3D-Ansicht des gewählten Teils (STL-Datei).</span></li>
+  <li><span class="num">10</span><span>2D-Plan des gewählten Teils (SVG-Datei).</span></li>
+  <li><span class="num">11</span><span>OpenSCAD-Code des Teils oder seine Darstellung durch OpenSCAD.</span></li>
+  <li><span class="num">12</span><span>Ergebnis der letzten Konvertierung. <span class="ui">Bericht anzeigen</span> zeigt die Einzelheiten.</span></li>
+</ol>
+
+<h2><span class="n">4</span>Einen Entwurf konvertieren</h2>
+<ol class="steps">
+  <li>Speichern Sie Ihren Entwurf in OpenRocket. Dateien aller aktuellen Versionen werden gelesen, komprimiert oder nicht.</li>
+  <li>Wählen Sie die <code>.ork</code>-Datei mit <span class="ui">Durchsuchen…</span> – oder ziehen Sie sie einfach auf das Fenster: Die Konvertierung startet dann sofort.</li>
+  <li>Prüfen Sie den Ausgabeordner und aktivieren Sie <span class="ui">STL</span> und/oder <span class="ui">SVG</span>.</li>
+  <li>Klicken Sie auf <span class="ui">Konvertieren</span>. Die Statusleiste zeigt die Anzahl geschriebener Dateien, Warnungen und Hinweise, und die Teile erscheinen in der Liste.</li>
+  <li>Klicken Sie auf <span class="ui">Bericht anzeigen</span>, um die Dateiliste, die <b>Warnungen</b> (z.&nbsp;B. ein Teil, das mangels Maß übersprungen wurde) und die <b>Hinweise</b> (Anzahl herzustellender Exemplare, nicht erzeugte Komponenten) zu lesen.</li>
+</ol>
+<div class="note warn">Gleichnamige Dateien, die schon im Ausgabeordner liegen, werden ersetzt.</div>
+
+<h2><span class="n">5</span>Die Dateien</h2>
+<ul>
+  <li><b>Namen</b>: Art des Teils und Nummer in der Reihenfolge des Entwurfs, zum Beispiel
+    <span class="file">body-tube-3d1.stl</span>, <span class="file">centeringring-CNC1.svg</span>,
+    <span class="file">noseCone-Ogive3D.scad</span>. <span class="file">3d</span> kennzeichnet ein 3D-Teil,
+    <span class="file">CNC</span> eine flache Schneidkontur.</li>
+  <li><b>.scad</b>: OpenSCAD-Modell des Teils, zum Öffnen, Ändern oder Exportieren mit OpenSCAD.</li>
+  <li><b>.stl</b>: dasselbe Teil wie die <code>.scad</code>-Datei, bereit für den Slicer. Das hintere Ende liegt unten
+    (z&nbsp;=&nbsp;0), die Spitze oben; Schultern sind enthalten und mit der Wand verbunden.</li>
+  <li><b>.svg</b>: die Schneidkontur in Originalgröße als dünne rote Linie (0,1&nbsp;mm) ohne Füllung: eine geschlossene Kontur für eine Flosse mit Steg, konzentrische Kreise für einen Ring oder ein Schott.</li>
+  <li><b>Wie viele</b>: Pro Teil wird eine Datei geschrieben. Wird ein Teil mehrfach gebraucht (Flossenzahl, Pods,
+    mehrere Rail-Buttons), zeigt die Liste ×&nbsp;<i>n</i>, und der Bericht nennt die Anzahl.</li>
+  <li><b>„auto“-Maße</b>: In OpenRocket auf <i>auto</i> belassene Maße (Radius eines Rohrs, eines Rings…) werden
+    genauso berechnet wie in OpenRocket.</li>
+</ul>
+
+<h2><span class="n">6</span>Teile ansehen</h2>
+<p>Klicken Sie auf ein Teil in der Liste: Seine Dateien erscheinen in den drei Feldern.</p>
+<h3>3D-Ansicht</h3>
+<p>Ziehen zum Drehen, Mausrad zum Zoomen, mit rechter Maustaste ziehen zum Verschieben, Doppelklick für die
+Ausgangsansicht (<span class="ui">Ausgangsansicht</span>). <span class="ui">Schnitt</span> schneidet das Teil
+in der Mitte durch und zeigt die Wandstärke; Innenflächen sind blau. Oben stehen die Abmessungen des Teils und die Anzahl seiner Dreiecke.</p>
+<h3>2D-Plan</h3>
+<p>Die Schnittlinie ist rot auf einem Millimeterraster (<span class="ui">mm-Raster</span>) gezeichnet, mit den
+Durchmessern der Kreise oder den Abmessungen der Kontur und einem Maßstabsbalken. <span class="ui">Einpassen</span>
+zeigt das ganze Teil; das Mausrad zoomt.</p>
+<h3>OpenSCAD</h3>
+<p><span class="ui">Code</span> zeigt den farbigen Code mit Zeilennummern. Hat ein Teil mehrere
+<code>.scad</code>-Dateien (ein Zentrierring hat eine 2D- und eine 3D-Datei), wählen Sie sie in der Liste neben den
+Reitern. <span class="ui">Rendern</span> zeigt das von OpenSCAD berechnete Teil (das kann einige Sekunden dauern).
+<span class="ui">In OpenSCAD öffnen</span> öffnet die Datei mit dem Programm, das mit <code>.scad</code>-Dateien verknüpft ist.</p>
+<div class="note">Ist OpenSCAD installiert, wird aber nicht gefunden, klicken Sie unten im Feld auf
+<span class="ui">Installationsort angeben…</span> und wählen <span class="file">openscad.exe</span>. Die Wahl wird gespeichert.</div>
+
+<h2><span class="n">7</span>Teile herstellen</h2>
+<h3>3D-Druck</h3>
+<ul>
+  <li>Öffnen Sie die <code>.stl</code>-Dateien in Ihrem Slicer (PrusaSlicer, Cura, Bambu Studio…); die Einheit ist Millimeter.</li>
+  <li>Lange Rumpfrohre werden in einem Stück geschrieben: Teilen Sie sie im Slicer, wenn sie nicht auf Ihren Drucker passen.</li>
+  <li>Das Schraubenloch der Rail-Buttons ist nicht modelliert: Bohren Sie es oder fügen Sie es in OpenSCAD hinzu.</li>
+</ul>
+<h3>Laser- oder CNC-Schneiden</h3>
+<ul>
+  <li>Die SVG-Dateien sind in Millimetern bemaßt und werden in LightBurn, Inkscape, LaserGRBL… in Originalgröße
+    importiert. Prüfen Sie, dass Ihre Software sie beim Import nicht skaliert.</li>
+  <li>Es gibt keine Schnittspaltkorrektur: Stellen Sie sie in Ihrer Laser- oder CAM-Software ein.</li>
+  <li>Flossen: eine Flosse pro Datei, Wurzelprofil unten mit Steg; schneiden Sie die angegebene Anzahl (×&nbsp;<i>n</i>).</li>
+</ul>
+
+<h2><span class="n">8</span>Sprache</h2>
+<p>Das Programm startet in der Sprache Ihres Computers, wenn sie zu den 11 verfügbaren Sprachen gehört, sonst auf
+Englisch. Mit der Auswahl oben rechts wählen Sie eine andere: Das Fenster wechselt sofort und behält die geladenen
+Teile. <span class="ui">Automatisch</span> kehrt zur Sprache des Computers zurück. Die Wahl wird gespeichert.</p>
+
+<h2><span class="n">9</span>Wenn etwas nicht klappt</h2>
+<ul>
+  <li><b>Ein Teil fehlt</b>: Lesen Sie die Warnungen im Bericht. Eine Komponente mit Größe <i>auto</i>, die sich
+    aus nichts ableiten lässt, wird übersprungen: Geben Sie ihr in OpenRocket ein Maß und konvertieren Sie erneut.</li>
+  <li><b>„OpenSCAD nicht gefunden“</b>: Installieren Sie OpenSCAD oder geben Sie seinen Ort an (Abschnitt 6). Der Code ist immer sichtbar.</li>
+  <li><b>Kein STL oder SVG für ein Teil</b>: Flache Teile haben kein STL, 3D-Teile kein SVG; sonst die Option aktivieren und erneut konvertieren.</li>
+  <li><b>Das Handbuch öffnet sich nicht</b>: Ein PDF-Betrachter muss installiert sein.</li>
+</ul>
+
+<h2><span class="n">10</span>Kontakt</h2>
+<p>Fragen, Vorschläge oder ein Entwurf, der nicht gut konvertiert wird: Schreiben Sie dem Autor, mit der
+Versionsnummer und, wenn möglich, der <code>.ork</code>-Datei.</p>
+<div class="contact">
+  <div><span>Autor</span><b>{{author}}</b></div>
+  <div><span>E-Mail</span><a href="mailto:{{email}}">{{email}}</a></div>
+  <div><span>Version</span>{{version}}</div>
+</div>

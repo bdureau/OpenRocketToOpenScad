@@ -1,0 +1,137 @@
+<div class="cover">
+  <img src="{{icon}}" alt="">
+  <div>
+    <h1>ORKtoSCAD</h1>
+    <div class="sub">Kullanım kılavuzu · sürüm {{version}}</div>
+  </div>
+</div>
+
+<p class="lead">ORKtoSCAD, OpenRocket ile tasarlanmış bir roketi (<code>.ork</code> dosyası) parçalarını üretmek için
+dosyalara dönüştürür: baskı için 3B modeller, lazer ya da CNC ile kesim için planlar ve değiştirebileceğiniz OpenSCAD modelleri.</p>
+
+<h2><span class="n">1</span>ORKtoSCAD ne üretir</h2>
+<p>Tasarımın her bileşeni bir veya daha fazla dosya verir; tüm ölçüler <b>milimetre</b> cinsindendir:</p>
+<table>
+  <tr><th>OpenRocket bileşeni</th><th class="c">STL (3B baskı)</th><th class="c">SVG (lazer / CNC)</th><th class="c">OpenSCAD</th></tr>
+  <tr><td>Burun konisi, geçiş</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Gövde borusu, bağlantı borusu, iç boru, motor durdurucu</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Merkezleme halkası</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Bölme</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Yamuk, eliptik ve serbest biçimli kanatçıklar (dili ile birlikte bir kanatçık)</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Boru kanatçıklar, kılavuz borusu, ray düğmesi</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+</table>
+<p>Pod ve booster içindeki parçalar da aynı şekilde işlenir. Paraşütler, fren şeritleri, şok ipleri ve kütle
+bileşenleri basılacak ya da kesilecek parçalar değildir: atlanırlar ve rapor kaç tane olduğunu belirtir.</p>
+
+<h2><span class="n">2</span>Kurulum ve başlatma</h2>
+<ul>
+  <li><b>Windows uygulaması</b>: <span class="file">ORKtoSCAD</span> klasörünü açın ve
+    <span class="file">ORKtoSCAD.exe</span> dosyasını başlatın (kurulum programını kullandıysanız Başlat menüsündeki
+    kısayolu). Klasörü bütün olarak tutun: kendi Java’sını içerir, bu yüzden Java kurmanız gerekmez.</li>
+  <li><b>Java sürümü</b> (Windows, macOS, Linux): Java 16 veya daha yenisi kuruluysa
+    <span class="file">orkToScad.jar</span> dosyasına çift tıklayın ya da <code>java -jar orkToScad.jar</code> yazın.
+    Arkasına bir <code>.ork</code> dosyası eklerseniz hemen dönüştürülür.</li>
+  <li><b>OpenSCAD</b> (isteğe bağlı, ücretsiz, <i>openscad.org</i>) yalnızca <span class="ui">İşleme</span> sekmesi
+    ve <code>.scad</code> dosyalarını değiştirmek ya da dışa aktarmak için gerekir. STL ve SVG dosyaları onsuz da yazılır.</li>
+</ul>
+
+<h2><span class="n">3</span>Pencere</h2>
+<figure>
+  <img src="{{screenshot}}" alt="">
+</figure>
+<ol class="callouts">
+  <li><span class="num">1</span><span><span class="ui">Yardım</span> menüsü: bu kılavuz (<kbd>F1</kbd>) ve program hakkında bilgi.</span></li>
+  <li><span class="num">2</span><span>Dönüştürülecek OpenRocket dosyası. Yolunu yazın, <span class="ui">Gözat…</span> düğmesini kullanın ya da dosyayı pencereye bırakın.</span></li>
+  <li><span class="num">3</span><span>Çıktı klasörü. <code>.ork</code> dosyasının yanında <span class="file">&lt;tasarım&gt;_out</span> adlı bir klasör önerilir; <span class="ui">Gözat…</span> ile başka bir klasör seçebilirsiniz.</span></li>
+  <li><span class="num">4</span><span><span class="ui">STL</span> ve <span class="ui">SVG</span>: 3B dosyaları ve kesim planlarını da yaz. <code>.scad</code> dosyaları her zaman yazılır.</span></li>
+  <li><span class="num">5</span><span><span class="ui">Dönüştür</span> dönüştürmeyi başlatır.</span></li>
+  <li><span class="num">6</span><span><span class="ui">Klasör aç…</span> önceki bir dönüştürmenin dosyalarını yeniden dönüştürmeden gösterir.</span></li>
+  <li><span class="num">7</span><span>Programın dili (bkz. bölüm 8).</span></li>
+  <li><span class="num">8</span><span>Türe göre gruplanmış parçalar; her biri için mevcut dosyalar (STL, SVG, SCAD) ve üretilecek adet (×&nbsp;2…). Üstteki kutu listeyi ada göre süzer.</span></li>
+  <li><span class="num">9</span><span>Seçili parçanın 3B görünümü (STL dosyası).</span></li>
+  <li><span class="num">10</span><span>Seçili parçanın 2B planı (SVG dosyası).</span></li>
+  <li><span class="num">11</span><span>Parçanın OpenSCAD kodu ya da OpenSCAD ile işlenmiş görüntüsü.</span></li>
+  <li><span class="num">12</span><span>Son dönüştürmenin sonucu. <span class="ui">Raporu göster</span> ayrıntıları verir.</span></li>
+</ol>
+
+<h2><span class="n">4</span>Bir tasarımı dönüştürmek</h2>
+<ol class="steps">
+  <li>Tasarımınızı OpenRocket’te kaydedin. Tüm güncel sürümlerin dosyaları, sıkıştırılmış olsun ya da olmasın, okunur.</li>
+  <li><code>.ork</code> dosyasını <span class="ui">Gözat…</span> ile seçin ya da doğrudan pencereye bırakın: bu durumda dönüştürme hemen başlar.</li>
+  <li>Çıktı klasörünü kontrol edin ve <span class="ui">STL</span> ve/veya <span class="ui">SVG</span> kutusunu işaretleyin.</li>
+  <li><span class="ui">Dönüştür</span> düğmesine tıklayın. Durum çubuğu yazılan dosya, uyarı ve not sayısını gösterir; parçalar listede belirir.</li>
+  <li>Dosya listesini, <b>uyarıları</b> (örneğin bir ölçü eksik olduğu için atlanan bir parça) ve <b>notları</b> (üretilecek adet, üretilmeyen bileşenler) okumak için <span class="ui">Raporu göster</span> bağlantısına tıklayın.</li>
+</ol>
+<div class="note warn">Çıktı klasöründe aynı adla zaten bulunan dosyaların yerine yenileri yazılır.</div>
+
+<h2><span class="n">5</span>Dosyalar</h2>
+<ul>
+  <li><b>Adlar</b>: parça türü ve tasarımdaki sıraya göre numara, örneğin
+    <span class="file">body-tube-3d1.stl</span>, <span class="file">centeringring-CNC1.svg</span>,
+    <span class="file">noseCone-Ogive3D.scad</span>. <span class="file">3d</span> bir 3B parçayı,
+    <span class="file">CNC</span> kesilecek düz bir dış hattı belirtir.</li>
+  <li><b>.scad</b>: parçanın OpenSCAD modeli; OpenSCAD ile açılabilir, değiştirilebilir veya dışa aktarılabilir.</li>
+  <li><b>.stl</b>: <code>.scad</code> dosyasıyla aynı parça, dilimleyiciye hazır. Arka uç altta (z&nbsp;=&nbsp;0),
+    uç üstte; omuzlar dahildir ve duvara bağlıdır.</li>
+  <li><b>.svg</b>: gerçek boyutta kesim hattı, dolgusuz ince kırmızı çizgi (0,1&nbsp;mm): dili ile birlikte bir kanatçık için tek kapalı hat, halka veya bölme için eş merkezli daireler.</li>
+  <li><b>Kaç adet</b>: her parça için bir dosya yazılır. Bir parça birden çok kez gerekiyorsa (kanatçık sayısı, podlar,
+    birden çok ray düğmesi) liste ×&nbsp;<i>n</i> gösterir ve rapor kaç adet üretileceğini belirtir.</li>
+  <li><b>“auto” ölçüler</b>: OpenRocket’te <i>auto</i> bırakılan ölçüler (bir borunun, bir halkanın yarıçapı…)
+    OpenRocket’teki gibi hesaplanır.</li>
+</ul>
+
+<h2><span class="n">6</span>Parçaları incelemek</h2>
+<p>Listede bir parçaya tıklayın: dosyaları üç kutuda gösterilir.</p>
+<h3>3B görünüm</h3>
+<p>Döndürmek için sürükleyin, yakınlaştırmak için tekerleği kullanın, kaydırmak için sağ tuşla sürükleyin, ilk
+görünüme dönmek için çift tıklayın (<span class="ui">İlk görünüm</span>). <span class="ui">Kesit</span> duvar
+kalınlığını göstermek için parçayı ikiye böler; iç yüzeyler mavidir. Üstte parçanın boyutları ve üçgen sayısı yazar.</p>
+<h3>2B plan</h3>
+<p>Kesim çizgisi milimetrik ızgara (<span class="ui">mm ızgara</span>) üzerinde kırmızı çizilir; dairelerin çapları
+veya dış hattın boyutları ve bir ölçek çubuğu gösterilir. <span class="ui">Sığdır</span> parçanın tamamını gösterir;
+tekerlek yakınlaştırır.</p>
+<h3>OpenSCAD</h3>
+<p><span class="ui">Kod</span>, satır numaralı renkli kodu gösterir. Bir parçanın birden çok <code>.scad</code>
+dosyası varsa (merkezleme halkasının bir 2B ve bir 3B dosyası vardır), sekmelerin yanındaki listeden seçin.
+<span class="ui">İşleme</span>, OpenSCAD’in hesapladığı parçayı gösterir (birkaç saniye sürebilir).
+<span class="ui">OpenSCAD’de aç</span>, dosyayı <code>.scad</code> dosyalarıyla ilişkili programla açar.</p>
+<div class="note">OpenSCAD kurulu ama bulunamıyorsa kutunun altındaki <span class="ui">Nereye kurulduğunu belirtin…</span>
+bağlantısına tıklayıp <span class="file">openscad.exe</span> dosyasını seçin. Seçim hatırlanır.</div>
+
+<h2><span class="n">7</span>Parçaları üretmek</h2>
+<h3>3B baskı</h3>
+<ul>
+  <li><code>.stl</code> dosyalarını dilimleyicinizde (PrusaSlicer, Cura, Bambu Studio…) açın; birim milimetredir.</li>
+  <li>Uzun gövde boruları tek parça olarak yazılır: yazıcınıza sığmıyorsa dilimleyicide bölün.</li>
+  <li>Ray düğmelerinin vida deliği modellenmez: delin ya da OpenSCAD’de ekleyin.</li>
+</ul>
+<h3>Lazer veya CNC kesim</h3>
+<ul>
+  <li>SVG dosyaları milimetre cinsinden boyutlandırılmıştır ve LightBurn, Inkscape, LaserGRBL… içine gerçek boyutta
+    aktarılır. Programınızın içe aktarırken ölçeği değiştirmediğini kontrol edin.</li>
+  <li>Kesim payı (kerf) telafisi uygulanmaz: bunu lazer veya CAM yazılımınızda ayarlayın.</li>
+  <li>Kanatçıklar: dosya başına bir kanatçık, kök kirişi altta, diliyle birlikte; belirtilen sayıda kanatçık kesin (×&nbsp;<i>n</i>).</li>
+</ul>
+
+<h2><span class="n">8</span>Dil</h2>
+<p>Program, mevcut 11 dilden biriyse bilgisayarınızın dilinde, değilse İngilizce başlar. Sağ üstteki seçiciyle
+başka bir dil seçebilirsiniz: pencere hemen değişir ve yüklü parçaları korur. <span class="ui">Otomatik</span>
+bilgisayarın diline döner. Seçim hatırlanır.</p>
+
+<h2><span class="n">9</span>Bir sorun olursa</h2>
+<ul>
+  <li><b>Bir parça eksik</b>: rapordaki uyarıları okuyun. Boyutu <i>auto</i> olan ve hiçbir yerden çıkarılamayan
+    bir bileşen atlanır: OpenRocket’te ona bir ölçü verin ve yeniden dönüştürün.</li>
+  <li><b>“OpenSCAD bulunamadı”</b>: OpenSCAD’i kurun ya da nerede olduğunu belirtin (bölüm 6). Kod her zaman görünür.</li>
+  <li><b>Bir parça için STL veya SVG yok</b>: düz parçaların STL’i, 3B parçaların SVG’si yoktur; aksi hâlde seçeneği işaretleyip yeniden dönüştürün.</li>
+  <li><b>Kılavuz açılmıyor</b>: bir PDF okuyucu kurulu olmalıdır.</li>
+</ul>
+
+<h2><span class="n">10</span>İletişim</h2>
+<p>Sorular, öneriler ya da iyi dönüştürülemeyen bir tasarım için yazara yazın; sürüm numarasını belirtin ve mümkünse
+<code>.ork</code> dosyasını ekleyin.</p>
+<div class="contact">
+  <div><span>Yazar</span><b>{{author}}</b></div>
+  <div><span>E-posta</span><a href="mailto:{{email}}">{{email}}</a></div>
+  <div><span>Sürüm</span>{{version}}</div>
+</div>

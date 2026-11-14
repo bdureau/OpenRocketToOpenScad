@@ -62,10 +62,11 @@ public final class FileUtils {
         if (Files.isRegularFile(p)) {
             return Files.readString(p, StandardCharsets.UTF_8);
         }
-        throw new IOException("OpenSCAD template not found: " + TEMPLATE_DIR + "/" + fileName);
+        throw new I18n.LocalizedIOException(new I18n.Msg("err.template", TEMPLATE_DIR + "/" + fileName));
     }
 
-    private static Path jarDirectory() {
+    /** Folder of the jar (or of the classes when run from Eclipse), or null. */
+    static Path jarDirectory() {
         try {
             Path location = Paths.get(FileUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             return Files.isDirectory(location) ? location : location.getParent();

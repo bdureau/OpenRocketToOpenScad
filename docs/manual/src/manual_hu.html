@@ -1,0 +1,136 @@
+<div class="cover">
+  <img src="{{icon}}" alt="">
+  <div>
+    <h1>ORKtoSCAD</h1>
+    <div class="sub">Felhasználói kézikönyv · {{version}} verzió</div>
+  </div>
+</div>
+
+<p class="lead">Az ORKtoSCAD az OpenRocketben tervezett rakétát (<code>.ork</code> fájl) az alkatrészei elkészítéséhez
+szükséges fájlokká alakítja: nyomtatható 3D-modellekké, lézeres vagy CNC-vágáshoz való tervekké és módosítható OpenSCAD-modellekké.</p>
+
+<h2><span class="n">1</span>Mit készít az ORKtoSCAD</h2>
+<p>A terv minden eleméből egy vagy több fájl készül, minden méret <b>milliméterben</b>:</p>
+<table>
+  <tr><th>OpenRocket-elem</th><th class="c">STL (3D-nyomtatás)</th><th class="c">SVG (lézer / CNC)</th><th class="c">OpenSCAD</th></tr>
+  <tr><td>Orrkúp, átmenet</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Törzscső, csatlakozócső, belső cső, motorütköző</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Központosító gyűrű</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Válaszfal</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Trapéz, elliptikus és szabad formájú vezérsíkok (egy vezérsík a csapjával)</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Csőszerű vezérsíkok, vezetőcső, sínvezető gomb</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+</table>
+<p>A podokban és gyorsítófokozatokban lévő alkatrészek ugyanígy készülnek. Az ejtőernyők, fékszalagok,
+lengéscsillapító zsinórok és tömegelemek nem nyomtatandó vagy vágandó alkatrészek: kimaradnak, és a jelentés megadja a számukat.</p>
+
+<h2><span class="n">2</span>Telepítés és indítás</h2>
+<ul>
+  <li><b>Windows-alkalmazás</b>: nyissa meg az <span class="file">ORKtoSCAD</span> mappát, és indítsa el az
+    <span class="file">ORKtoSCAD.exe</span> fájlt (vagy a Start menü parancsikonját, ha a telepítőt használta).
+    A mappát egyben tartsa: saját Javát tartalmaz, így a Javát nem kell telepíteni.</li>
+  <li><b>Java-változat</b> (Windows, macOS, Linux): telepített Java 16 vagy újabb esetén kattintson duplán az
+    <span class="file">orkToScad.jar</span> fájlra, vagy írja be: <code>java -jar orkToScad.jar</code>. Ha egy
+    <code>.ork</code> fájlt is megad utána, azonnal átalakítja.</li>
+  <li><b>OpenSCAD</b> (nem kötelező, ingyenes, <i>openscad.org</i>) csak a <span class="ui">Renderelés</span> laphoz
+    és a <code>.scad</code> fájlok módosításához vagy exportálásához kell. Az STL- és SVG-fájlok nélküle is elkészülnek.</li>
+</ul>
+
+<h2><span class="n">3</span>Az ablak</h2>
+<figure>
+  <img src="{{screenshot}}" alt="">
+</figure>
+<ol class="callouts">
+  <li><span class="num">1</span><span><span class="ui">Súgó</span> menü: ez a kézikönyv (<kbd>F1</kbd>) és információk a programról.</span></li>
+  <li><span class="num">2</span><span>Az átalakítandó OpenRocket-fájl. Írja be az elérési útját, használja a <span class="ui">Tallózás…</span> gombot, vagy húzza a fájlt az ablakra.</span></li>
+  <li><span class="num">3</span><span>Kimeneti mappa. A program egy <span class="file">&lt;terv&gt;_out</span> mappát javasol az <code>.ork</code> fájl mellett; a <span class="ui">Tallózás…</span> gombbal másikat választhat.</span></li>
+  <li><span class="num">4</span><span><span class="ui">STL</span> és <span class="ui">SVG</span>: a 3D-fájlok és a vágási tervek írása is. A <code>.scad</code> fájlok mindig elkészülnek.</span></li>
+  <li><span class="num">5</span><span>Az <span class="ui">Átalakítás</span> elindítja az átalakítást.</span></li>
+  <li><span class="num">6</span><span>A <span class="ui">Mappa megnyitása…</span> egy korábbi átalakítás fájljait mutatja újbóli átalakítás nélkül.</span></li>
+  <li><span class="num">7</span><span>A program nyelve (lásd a 8. részt).</span></li>
+  <li><span class="num">8</span><span>Az alkatrészek típus szerint csoportosítva, az elérhető fájlokkal (STL, SVG, SCAD) és az elkészítendő darabszámmal (×&nbsp;2…). A felső mező név szerint szűri a listát.</span></li>
+  <li><span class="num">9</span><span>A kiválasztott alkatrész 3D nézete (STL-fájl).</span></li>
+  <li><span class="num">10</span><span>A kiválasztott alkatrész 2D terve (SVG-fájl).</span></li>
+  <li><span class="num">11</span><span>Az alkatrész OpenSCAD-kódja vagy OpenSCAD-renderelése.</span></li>
+  <li><span class="num">12</span><span>Az utolsó átalakítás eredménye. A <span class="ui">Jelentés megjelenítése</span> mutatja a részleteket.</span></li>
+</ol>
+
+<h2><span class="n">4</span>Egy terv átalakítása</h2>
+<ol class="steps">
+  <li>Mentse a tervet az OpenRocketben. A program minden újabb verzió fájljait beolvassa, tömörítve vagy anélkül.</li>
+  <li>Válassza ki az <code>.ork</code> fájlt a <span class="ui">Tallózás…</span> gombbal, vagy egyszerűen húzza az ablakra: ekkor az átalakítás azonnal elindul.</li>
+  <li>Ellenőrizze a kimeneti mappát, és jelölje be az <span class="ui">STL</span> és/vagy <span class="ui">SVG</span> lehetőséget.</li>
+  <li>Kattintson az <span class="ui">Átalakítás</span> gombra. Az állapotsor mutatja a megírt fájlok, figyelmeztetések és megjegyzések számát, az alkatrészek pedig megjelennek a listában.</li>
+  <li>Kattintson a <span class="ui">Jelentés megjelenítése</span> hivatkozásra a fájllista, a <b>figyelmeztetések</b> (például egy hiányzó méret miatt kihagyott alkatrész) és a <b>megjegyzések</b> (elkészítendő darabszám, nem készülő elemek) elolvasásához.</li>
+</ol>
+<div class="note warn">A kimeneti mappában már meglévő, azonos nevű fájlokat a program felülírja.</div>
+
+<h2><span class="n">5</span>A fájlok</h2>
+<ul>
+  <li><b>Nevek</b>: az alkatrész típusa és sorszáma a tervben, például
+    <span class="file">body-tube-3d1.stl</span>, <span class="file">centeringring-CNC1.svg</span>,
+    <span class="file">noseCone-Ogive3D.scad</span>. A <span class="file">3d</span> térbeli alkatrészt,
+    a <span class="file">CNC</span> vágandó sík körvonalat jelöl.</li>
+  <li><b>.scad</b>: az alkatrész OpenSCAD-modellje, amely OpenSCAD-ben megnyitható, módosítható vagy exportálható.</li>
+  <li><b>.stl</b>: ugyanaz az alkatrész, mint a <code>.scad</code> fájlban, szeletelőhöz készen. A hátsó vég alul
+    (z&nbsp;=&nbsp;0), a csúcs felül van; a vállak benne vannak, és a fallal egybeépülnek.</li>
+  <li><b>.svg</b>: a vágási körvonal valós méretben, kitöltés nélküli vékony piros vonallal (0,1&nbsp;mm): egy zárt körvonal a vezérsíkhoz és csapjához, koncentrikus körök a gyűrűhöz vagy válaszfalhoz.</li>
+  <li><b>Hány darab</b>: alkatrészenként egy fájl készül. Ha egy alkatrész többször kell (vezérsíkok száma, podok,
+    több sínvezető gomb), a lista ×&nbsp;<i>n</i> jelzést mutat, a jelentés pedig megadja, hányat kell elkészíteni.</li>
+  <li><b>„auto” méretek</b>: az OpenRocketben <i>auto</i> értéken hagyott méreteket (cső, gyűrű sugara…) a program
+    ugyanúgy számítja ki, mint az OpenRocket.</li>
+</ul>
+
+<h2><span class="n">6</span>Az alkatrészek megtekintése</h2>
+<p>Kattintson egy alkatrészre a listában: a fájljai megjelennek a három mezőben.</p>
+<h3>3D nézet</h3>
+<p>Húzással forgat, a görgővel nagyít, jobb gombos húzással mozgat, dupla kattintással visszatér a kezdő nézethez
+(<span class="ui">Kezdő nézet</span>). A <span class="ui">Metszet</span> kettévágja az alkatrészt, hogy látsszon a
+falvastagság; a belső felületek kékek. Felül az alkatrész méretei és háromszögeinek száma látható.</p>
+<h3>2D terv</h3>
+<p>A vágási vonal pirossal látszik milliméteres rácson (<span class="ui">mm-rács</span>), a körök átmérőjével vagy a
+körvonal méreteivel és egy méretléccel. Az <span class="ui">Igazítás</span> a teljes alkatrészt mutatja; a görgő nagyít.</p>
+<h3>OpenSCAD</h3>
+<p>A <span class="ui">Kód</span> színezett kódot mutat sorszámokkal. Ha egy alkatrésznek több <code>.scad</code> fájlja
+van (egy központosító gyűrűnek van 2D és 3D fájlja is), válassza ki a lapok melletti listában. A
+<span class="ui">Renderelés</span> az OpenSCAD által kiszámított alkatrészt mutatja (ez néhány másodpercig tarthat).
+A <span class="ui">Megnyitás OpenSCAD-ben</span> a <code>.scad</code> fájlokhoz társított programmal nyitja meg a fájlt.</p>
+<div class="note">Ha az OpenSCAD telepítve van, de a program nem találja, kattintson a mező alján a
+<span class="ui">Telepítési hely megadása…</span> hivatkozásra, és válassza ki az <span class="file">openscad.exe</span> fájlt. A választást a program megjegyzi.</div>
+
+<h2><span class="n">7</span>Az alkatrészek elkészítése</h2>
+<h3>3D-nyomtatás</h3>
+<ul>
+  <li>Nyissa meg a <code>.stl</code> fájlokat a szeletelőben (PrusaSlicer, Cura, Bambu Studio…); a mértékegység a milliméter.</li>
+  <li>A hosszú törzscsövek egy darabban készülnek: ha nem férnek el a nyomtatón, vágja szét őket a szeletelőben.</li>
+  <li>A sínvezető gombok csavarfurata nincs megmodellezve: fúrja ki, vagy adja hozzá OpenSCAD-ben.</li>
+</ul>
+<h3>Lézeres vagy CNC-vágás</h3>
+<ul>
+  <li>Az SVG-fájlok milliméterben vannak méretezve, és valós méretben importálódnak a LightBurnbe, Inkscape-be,
+    LaserGRBL-be… Ellenőrizze, hogy a program importáláskor nem méretezi-e át őket.</li>
+  <li>Vágásirés-kompenzáció nincs: állítsa be a lézer- vagy CAM-programban.</li>
+  <li>Vezérsíkok: fájlonként egy vezérsík, a tőhúr alul a csappal; vágja ki a megadott számú vezérsíkot (×&nbsp;<i>n</i>).</li>
+</ul>
+
+<h2><span class="n">8</span>Nyelv</h2>
+<p>A program a számítógép nyelvén indul, ha az a 11 elérhető nyelv egyike, egyébként angolul. A jobb felső sarokban
+lévő választóval másik nyelvet választhat: az ablak azonnal vált, és megtartja a betöltött alkatrészeket. Az
+<span class="ui">Automatikus</span> visszaállítja a számítógép nyelvét. A választást a program megjegyzi.</p>
+
+<h2><span class="n">9</span>Ha valami nem működik</h2>
+<ul>
+  <li><b>Hiányzik egy alkatrész</b>: olvassa el a jelentés figyelmeztetéseit. Az <i>auto</i> méretű elem, amelynek
+    mérete semmiből nem vezethető le, kimarad: adjon meg neki méretet az OpenRocketben, és alakítsa át újra.</li>
+  <li><b>„Az OpenSCAD nem található”</b>: telepítse az OpenSCAD-et, vagy adja meg a helyét (6. rész). A kód mindig látható.</li>
+  <li><b>Nincs STL vagy SVG egy alkatrészhez</b>: a sík alkatrészeknek nincs STL-je, a 3D alkatrészeknek nincs SVG-je; egyébként jelölje be a lehetőséget, és alakítsa át újra.</li>
+  <li><b>A kézikönyv nem nyílik meg</b>: PDF-olvasónak kell telepítve lennie.</li>
+</ul>
+
+<h2><span class="n">10</span>Kapcsolat</h2>
+<p>Kérdés, javaslat vagy rosszul átalakított terv esetén írjon a szerzőnek, adja meg a verziószámot, és ha lehet,
+csatolja az <code>.ork</code> fájlt.</p>
+<div class="contact">
+  <div><span>Szerző</span><b>{{author}}</b></div>
+  <div><span>E-mail</span><a href="mailto:{{email}}">{{email}}</a></div>
+  <div><span>Verzió</span>{{version}}</div>
+</div>

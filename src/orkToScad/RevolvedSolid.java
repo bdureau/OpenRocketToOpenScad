@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Builds solids of revolution and writes them as binary STL, without OpenSCAD.
  *
- * Every part handled here (tubes, rings, couplers, nose cones) is a 2D half-profile turned around
+ * Every part handled here (tubes, rings, couplers, nose cones, transitions, rail buttons) is a 2D half-profile turned around
  * the Z axis. The profile is built with {@link Area} boolean operations (x = radius, y = height,
  * in mm), then revolved with the same smoothness as the .scad files ($fn = 200).
  */
@@ -41,54 +41,116 @@ public final class RevolvedSolid {
         return new Area(new Rectangle2D.Double(ri, 0, outerRadius - ri, length));
     }
 
-    /**
-     * Nose cone half-profile: base at z = 0, tip at z = length, shoulder below z = 0.
-     * Same construction as {@code openscad/noseCone.scad}.
-     *
-     * @param wall wall thickness measured perpendicular to the surface; 0 = solid nose cone
-     */
-    public static Area noseConeProfile(NoseConeShape shape, double length, double radius, double wall,
-            double shoulderRadius, double shoulderLength, double shoulderThickness, boolean capped) {
+    /** Shoulder of a nose cone or transition (a short tube that slides into the body tube). */
+    public static final class Shoulder {
+        final double radius;
+        final double length;
+        final double thickness;
+        final boolean capped;
 
-        // Full silhouette on both sides of the axis, extended below the base (as in the template).
+        public Shoulder(double radius, double length, double thickness, boolean capped) {
+            this.radius = radius;
+            this.length = length;
+            this.thickness = thickness;
+            this.capped = capped;
+        }
+
+        boolean present() {
+            return radius > 0 && length > 0 && thickness > 0;
+        }
+    }
+
+    /**
+     * Half-profile of a nose cone or transition: aft end at z = 0, fore end at z = length,
+     * aft shoulder below z = 0, fore shoulder above z = length.
+     * Same construction as {@code openscad/noseCone.scad} and {@code openscad/transition.scad}.
+     *
+     * @param wall wall thickness measured perpendicular to the surface; 0 = solid part
+     * @param fore fore shoulder, or null
+     * @param aft  aft shoulder, or null
+     */
+    public static Area bodyProfile(BodyShape shape, double wall, Shoulder fore, Shoulder aft) {
+        double length = shape.length();
+        double rf = shape.foreRadius();
+        double ra = shape.aftRadius();
+        int steps = BodyShape.STEPS;
+
+        // Full silhouette on both sides of the axis. It is extended beyond the open ends so that the
+        // wall offset leaves them open (as in the templates).
         Path2D.Double sil = new Path2D.Double();
-        sil.moveTo(shape.radius(shape.xAt(0)), length - shape.xAt(0));
-        for (int i = 1; i <= NoseConeShape.STEPS; i++) {
+        if (rf > 0) {
+            sil.moveTo(rf, length + wall + 1);
+            sil.lineTo(shape.radius(shape.xAt(0)), length - shape.xAt(0));
+        } else {
+            sil.moveTo(shape.radius(shape.xAt(0)), length - shape.xAt(0));
+        }
+        for (int i = 1; i <= steps; i++) {
             double x = shape.xAt(i);
             sil.lineTo(shape.radius(x), length - x);
         }
-        sil.lineTo(radius, -wall - 1);
-        sil.lineTo(-radius, -wall - 1);
-        for (int i = NoseConeShape.STEPS; i >= 1; i--) {
+        sil.lineTo(ra, -wall - 1);
+        sil.lineTo(-ra, -wall - 1);
+        for (int i = steps; i >= 1; i--) {
             double x = shape.xAt(i);
             sil.lineTo(-shape.radius(x), length - x);
+        }
+        if (rf > 0) {
+            sil.lineTo(-shape.radius(shape.xAt(0)), length - shape.xAt(0));
+            sil.lineTo(-rf, length + wall + 1);
         }
         sil.closePath();
         Area solid = new Area(sil);
 
-        // Hollow cone: keep what is within 'wall' of the outline, i.e. solid minus offset(r = -wall).
-        Area cone = new Area(solid);
+        // Hollow part: keep what is within 'wall' of the outline, i.e. solid minus offset(r = -wall).
+        Area body = new Area(solid);
         if (wall > 0) {
             BasicStroke band = new BasicStroke((float) (2 * wall), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-            cone.intersect(new Area(band.createStrokedShape(sil)));
+            body.intersect(new Area(band.createStrokedShape(sil)));
         }
-        cone.intersect(new Area(new Rectangle2D.Double(0, 0, radius + 1, length)));
+        body.intersect(new Area(new Rectangle2D.Double(0, 0, shape.maxRadius() + 1, length)));
 
-        if (shoulderRadius > 0 && shoulderLength > 0 && shoulderThickness > 0) {
-            double rsIn = Math.max(0, shoulderRadius - shoulderThickness);
-            cone.add(new Area(new Rectangle2D.Double(rsIn, -shoulderLength,
-                    Math.min(shoulderThickness, shoulderRadius), shoulderLength)));
-            if (capped) {
-                cone.add(new Area(new Rectangle2D.Double(0, -shoulderLength, shoulderRadius,
-                        Math.min(shoulderThickness, shoulderLength))));
+        if (aft != null && aft.present()) {
+            double rIn = Math.max(0, aft.radius - aft.thickness);
+            body.add(new Area(new Rectangle2D.Double(rIn, -aft.length, Math.min(aft.thickness, aft.radius), aft.length)));
+            if (aft.capped) {
+                body.add(new Area(new Rectangle2D.Double(0, -aft.length, aft.radius, Math.min(aft.thickness, aft.length))));
             }
-            if (wall > 0) { // joint between the shoulder and the cone wall
-                Area joint = new Area(new Rectangle2D.Double(rsIn, 0, radius, Math.min(shoulderThickness, length)));
+            if (wall > 0) { // joint between the shoulder and the wall
+                Area joint = new Area(new Rectangle2D.Double(rIn, 0, ra, Math.min(aft.thickness, length)));
                 joint.intersect(solid);
-                cone.add(joint);
+                body.add(joint);
             }
         }
-        return cone;
+        if (fore != null && fore.present()) {
+            double rIn = Math.max(0, fore.radius - fore.thickness);
+            double t = Math.min(fore.thickness, fore.length);
+            body.add(new Area(new Rectangle2D.Double(rIn, length, Math.min(fore.thickness, fore.radius), fore.length)));
+            if (fore.capped) {
+                body.add(new Area(new Rectangle2D.Double(0, length + fore.length - t, fore.radius, t)));
+            }
+            if (wall > 0) {
+                double h = Math.min(fore.thickness, length);
+                Area joint = new Area(new Rectangle2D.Double(rIn, length - h, rf, h));
+                joint.intersect(solid);
+                body.add(joint);
+            }
+        }
+        return body;
+    }
+
+    /**
+     * Rail button seen from the side, standing on its base: base (outer diameter), waist (inner
+     * diameter), flange (outer diameter). The screw is not modelled.
+     */
+    public static Area railButtonProfile(double outerDiameter, double innerDiameter, double totalHeight,
+            double baseHeight, double flangeHeight) {
+        double ro = outerDiameter / 2;
+        double ri = innerDiameter / 2;
+        double waist = totalHeight - baseHeight - flangeHeight;
+        Area a = new Area(new Rectangle2D.Double(0, 0, ri, totalHeight));
+        a.add(new Area(new Rectangle2D.Double(0, 0, ro, baseHeight)));
+        a.add(new Area(new Rectangle2D.Double(0, baseHeight + Math.max(0, waist), ro, flangeHeight)));
+        return a;
     }
 
     // ------------------------------------------------------------------ STL

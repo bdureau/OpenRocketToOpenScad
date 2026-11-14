@@ -1,0 +1,137 @@
+<div class="cover">
+  <img src="{{icon}}" alt="">
+  <div>
+    <h1>ORKtoSCAD</h1>
+    <div class="sub">Instrukcja obsługi · wersja {{version}}</div>
+  </div>
+</div>
+
+<p class="lead">ORKtoSCAD zamienia rakietę zaprojektowaną w OpenRocket (plik <code>.ork</code>) na pliki do wykonania
+jej części: modele 3D do druku, plany do cięcia laserem lub na CNC oraz modele OpenSCAD, które można modyfikować.</p>
+
+<h2><span class="n">1</span>Co tworzy ORKtoSCAD</h2>
+<p>Każdy element projektu daje jeden lub kilka plików, wszystkie wymiary w <b>milimetrach</b>:</p>
+<table>
+  <tr><th>Element OpenRocket</th><th class="c">STL (druk 3D)</th><th class="c">SVG (laser / CNC)</th><th class="c">OpenSCAD</th></tr>
+  <tr><td>Stożek nosowy, przejście</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Rura korpusu, łącznik rur, rura wewnętrzna, ogranicznik silnika</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Pierścień centrujący</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Przegroda</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Stateczniki trapezowe, eliptyczne i o dowolnym kształcie (jeden statecznik z czopem)</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Stateczniki rurowe, rurka prowadząca, ślizg prowadnicy</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+</table>
+<p>Części w gondolach i boosterach są traktowane tak samo. Spadochrony, taśmy hamujące, linki amortyzujące i elementy
+masowe nie są częściami do druku ani cięcia: są pomijane, a raport podaje ich liczbę.</p>
+
+<h2><span class="n">2</span>Instalacja i uruchamianie</h2>
+<ul>
+  <li><b>Aplikacja Windows</b>: otwórz folder <span class="file">ORKtoSCAD</span> i uruchom
+    <span class="file">ORKtoSCAD.exe</span> (lub skrót w menu Start, jeśli użyto instalatora).
+    Nie rozdzielaj folderu: zawiera własną Javę, więc instalowanie Javy nie jest potrzebne.</li>
+  <li><b>Wersja Java</b> (Windows, macOS, Linux): przy zainstalowanej Javie 16 lub nowszej kliknij dwukrotnie
+    <span class="file">orkToScad.jar</span> albo wpisz <code>java -jar orkToScad.jar</code>. Dopisany na końcu plik
+    <code>.ork</code> zostanie od razu przekonwertowany.</li>
+  <li><b>OpenSCAD</b> (opcjonalny, bezpłatny, <i>openscad.org</i>) jest potrzebny tylko do karty <span class="ui">Render</span>
+    oraz do modyfikowania lub eksportowania plików <code>.scad</code>. Pliki STL i SVG są zapisywane bez niego.</li>
+</ul>
+
+<h2><span class="n">3</span>Okno programu</h2>
+<figure>
+  <img src="{{screenshot}}" alt="">
+</figure>
+<ol class="callouts">
+  <li><span class="num">1</span><span>Menu <span class="ui">Pomoc</span>: ta instrukcja (<kbd>F1</kbd>) i informacje o programie.</span></li>
+  <li><span class="num">2</span><span>Plik OpenRocket do konwersji. Wpisz ścieżkę, użyj <span class="ui">Przeglądaj…</span> albo upuść plik na okno.</span></li>
+  <li><span class="num">3</span><span>Folder wyjściowy. Proponowany jest folder <span class="file">&lt;projekt&gt;_out</span> obok pliku <code>.ork</code>; <span class="ui">Przeglądaj…</span> pozwala wybrać inny.</span></li>
+  <li><span class="num">4</span><span><span class="ui">STL</span> i <span class="ui">SVG</span>: zapisz także pliki 3D i plany cięcia. Pliki <code>.scad</code> są zapisywane zawsze.</span></li>
+  <li><span class="num">5</span><span><span class="ui">Konwertuj</span> uruchamia konwersję.</span></li>
+  <li><span class="num">6</span><span><span class="ui">Otwórz folder…</span> pokazuje pliki z wcześniejszej konwersji, bez ponownego konwertowania.</span></li>
+  <li><span class="num">7</span><span>Język programu (patrz rozdział 8).</span></li>
+  <li><span class="num">8</span><span>Części pogrupowane według rodzaju, z dostępnymi plikami (STL, SVG, SCAD) i liczbą egzemplarzy do wykonania (×&nbsp;2…). Pole u góry filtruje listę według nazwy.</span></li>
+  <li><span class="num">9</span><span>Widok 3D wybranej części (plik STL).</span></li>
+  <li><span class="num">10</span><span>Plan 2D wybranej części (plik SVG).</span></li>
+  <li><span class="num">11</span><span>Kod OpenSCAD części lub jej render w OpenSCAD.</span></li>
+  <li><span class="num">12</span><span>Wynik ostatniej konwersji. <span class="ui">Pokaż raport</span> podaje szczegóły.</span></li>
+</ol>
+
+<h2><span class="n">4</span>Konwersja projektu</h2>
+<ol class="steps">
+  <li>Zapisz projekt w OpenRocket. Odczytywane są pliki ze wszystkich nowszych wersji, skompresowane lub nie.</li>
+  <li>Wybierz plik <code>.ork</code> przyciskiem <span class="ui">Przeglądaj…</span> albo po prostu upuść go na okno: konwersja rozpocznie się od razu.</li>
+  <li>Sprawdź folder wyjściowy i zaznacz <span class="ui">STL</span> i/lub <span class="ui">SVG</span>.</li>
+  <li>Kliknij <span class="ui">Konwertuj</span>. Pasek stanu pokazuje liczbę zapisanych plików, ostrzeżeń i uwag, a części pojawiają się na liście.</li>
+  <li>Kliknij <span class="ui">Pokaż raport</span>, aby przeczytać listę plików, <b>ostrzeżenia</b> (np. część pominiętą z powodu braku wymiaru) i <b>uwagi</b> (liczba egzemplarzy do wykonania, elementy, które nie są tworzone).</li>
+</ol>
+<div class="note warn">Pliki o tej samej nazwie, które już są w folderze wyjściowym, zostaną zastąpione.</div>
+
+<h2><span class="n">5</span>Pliki</h2>
+<ul>
+  <li><b>Nazwy</b>: rodzaj części i numer w kolejności projektu, na przykład
+    <span class="file">body-tube-3d1.stl</span>, <span class="file">centeringring-CNC1.svg</span>,
+    <span class="file">noseCone-Ogive3D.scad</span>. <span class="file">3d</span> oznacza część 3D,
+    <span class="file">CNC</span> płaski kontur do cięcia.</li>
+  <li><b>.scad</b>: model OpenSCAD części, do otwarcia, modyfikacji lub eksportu w OpenSCAD.</li>
+  <li><b>.stl</b>: ta sama część co w pliku <code>.scad</code>, gotowa dla slicera. Tylny koniec jest na dole
+    (z&nbsp;=&nbsp;0), a czubek na górze; kołnierze są dołączone i połączone ze ścianką.</li>
+  <li><b>.svg</b>: kontur cięcia w rzeczywistym rozmiarze, jako cienka czerwona linia (0,1&nbsp;mm) bez wypełnienia: jeden zamknięty kontur dla statecznika z czopem, koncentryczne okręgi dla pierścienia lub przegrody.</li>
+  <li><b>Ile sztuk</b>: dla każdej części zapisywany jest jeden plik. Gdy część jest potrzebna kilka razy (liczba
+    stateczników, gondole, kilka ślizgów prowadnicy), lista pokazuje ×&nbsp;<i>n</i>, a raport podaje, ile wykonać.</li>
+  <li><b>Wymiary „auto”</b>: wymiary pozostawione w OpenRocket jako <i>auto</i> (promień rury, pierścienia…) są
+    obliczane tak samo jak w OpenRocket.</li>
+</ul>
+
+<h2><span class="n">6</span>Oglądanie części</h2>
+<p>Kliknij część na liście: jej pliki pojawią się w trzech polach.</p>
+<h3>Widok 3D</h3>
+<p>Przeciągnij, aby obracać, użyj kółka, aby powiększać, przeciągnij prawym przyciskiem, aby przesuwać, kliknij
+dwukrotnie, aby wrócić do widoku początkowego (<span class="ui">Widok początkowy</span>). <span class="ui">Przekrój</span>
+przecina część na pół, pokazując grubość ścianek; powierzchnie wewnętrzne są niebieskie. U góry podane są wymiary
+części i liczba trójkątów.</p>
+<h3>Plan 2D</h3>
+<p>Linia cięcia jest rysowana na czerwono na siatce milimetrowej (<span class="ui">Siatka mm</span>), ze średnicami
+okręgów lub wymiarami konturu oraz podziałką. <span class="ui">Dopasuj</span> pokazuje całą część; kółko powiększa.</p>
+<h3>OpenSCAD</h3>
+<p><span class="ui">Kod</span> pokazuje kolorowy kod z numerami wierszy. Gdy część ma kilka plików <code>.scad</code>
+(pierścień centrujący ma plik 2D i 3D), wybierz go z listy obok kart. <span class="ui">Render</span> pokazuje część
+obliczoną przez OpenSCAD (może to potrwać kilka sekund). <span class="ui">Otwórz w OpenSCAD</span> otwiera plik w
+programie skojarzonym z plikami <code>.scad</code>.</p>
+<div class="note">Jeśli OpenSCAD jest zainstalowany, ale nie został znaleziony, kliknij u dołu pola
+<span class="ui">Wskaż, gdzie jest zainstalowany…</span> i wybierz <span class="file">openscad.exe</span>. Wybór zostanie zapamiętany.</div>
+
+<h2><span class="n">7</span>Wykonanie części</h2>
+<h3>Druk 3D</h3>
+<ul>
+  <li>Otwórz pliki <code>.stl</code> w swoim slicerze (PrusaSlicer, Cura, Bambu Studio…); jednostką jest milimetr.</li>
+  <li>Długie rury korpusu są zapisywane w jednym kawałku: podziel je w slicerze, jeśli nie mieszczą się w drukarce.</li>
+  <li>Otwór na śrubę w ślizgach prowadnicy nie jest modelowany: wywierć go lub dodaj w OpenSCAD.</li>
+</ul>
+<h3>Cięcie laserem lub CNC</h3>
+<ul>
+  <li>Pliki SVG mają wymiary w milimetrach i importują się w rzeczywistym rozmiarze w LightBurn, Inkscape,
+    LaserGRBL… Sprawdź, czy program nie zmienia ich skali przy imporcie.</li>
+  <li>Nie jest stosowana kompensacja szerokości cięcia: ustaw ją w programie lasera lub CAM.</li>
+  <li>Stateczniki: jeden statecznik w pliku, cięciwa przykadłubowa na dole z czopem; wytnij podaną liczbę stateczników (×&nbsp;<i>n</i>).</li>
+</ul>
+
+<h2><span class="n">8</span>Język</h2>
+<p>Program uruchamia się w języku komputera, jeśli jest to jeden z 11 dostępnych języków, a w przeciwnym razie po
+angielsku. Wybierz inny język w polu w prawym górnym rogu: okno zmienia się od razu i zachowuje wczytane części.
+<span class="ui">Automatyczny</span> przywraca język komputera. Wybór jest zapamiętywany.</p>
+
+<h2><span class="n">9</span>Gdy coś nie działa</h2>
+<ul>
+  <li><b>Brakuje części</b>: przeczytaj ostrzeżenia w raporcie. Element o rozmiarze <i>auto</i>, którego nie da się
+    z niczego wyznaczyć, jest pomijany: nadaj mu wymiar w OpenRocket i przekonwertuj ponownie.</li>
+  <li><b>„Nie znaleziono OpenSCAD”</b>: zainstaluj OpenSCAD lub wskaż, gdzie się znajduje (rozdział 6). Kod jest zawsze widoczny.</li>
+  <li><b>Brak STL lub SVG dla części</b>: części płaskie nie mają STL, a części 3D nie mają SVG; w przeciwnym razie zaznacz opcję i przekonwertuj ponownie.</li>
+  <li><b>Instrukcja się nie otwiera</b>: musi być zainstalowana przeglądarka PDF.</li>
+</ul>
+
+<h2><span class="n">10</span>Kontakt</h2>
+<p>Pytania, sugestie lub projekt, który źle się konwertuje: napisz do autora, podając numer wersji i, jeśli to możliwe,
+dołączając plik <code>.ork</code>.</p>
+<div class="contact">
+  <div><span>Autor</span><b>{{author}}</b></div>
+  <div><span>E-mail</span><a href="mailto:{{email}}">{{email}}</a></div>
+  <div><span>Wersja</span>{{version}}</div>
+</div>

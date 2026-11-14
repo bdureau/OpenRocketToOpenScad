@@ -1,8 +1,6 @@
 package orkToScad;
 
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -20,6 +18,7 @@ import javax.swing.SwingUtilities;
  * Minimal 3D viewer for an {@link StlMesh}: software z-buffer rendering with Java2D only (no library).
  *
  * Mouse: left-drag rotates, right/middle-drag pans, wheel zooms, double-click resets the view.
+ * The overlay texts are in French, like the rest of the window.
  * The rocket axis (Z) is displayed vertically. In cutaway mode the half of the part facing the viewer
  * (at the default angle) is removed to show wall thicknesses. Surfaces facing the part's axis
  * (inside of tubes and hollow nose cones) are drawn in blue, outer surfaces in orange.
@@ -36,7 +35,7 @@ public final class StlViewPanel extends JPanel {
 
     private transient StlMesh mesh;
     private String title = "";
-    private String message = "No part selected";
+    private String message = "";
     private boolean cutaway;
 
     private double yaw = DEFAULT_YAW;
@@ -121,13 +120,13 @@ public final class StlViewPanel extends JPanel {
         Graphics2D g = (Graphics2D) g0;
         int w = Math.max(1, getWidth());
         int h = Math.max(1, getHeight());
-        g.setPaint(new GradientPaint(0, 0, new Color(250, 250, 252), 0, h, new Color(205, 210, 220)));
+        g.setColor(UiKit.VIEW_BG);
         g.fillRect(0, 0, w, h);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         if (mesh == null) {
-            g.setColor(Color.DARK_GRAY);
-            g.setFont(getFont().deriveFont(Font.PLAIN, 14f));
+            g.setColor(UiKit.MUTED);
+            g.setFont(UiKit.BASE);
             g.drawString(message == null ? "" : message, 20, 30);
             return;
         }
@@ -244,14 +243,24 @@ public final class StlViewPanel extends JPanel {
     }
 
     private void drawOverlay(Graphics2D g, int w, int h) {
-        g.setColor(new Color(40, 40, 40));
-        g.setFont(getFont().deriveFont(Font.BOLD, 14f));
-        g.drawString(title, 12, 22);
-        g.setFont(getFont().deriveFont(Font.PLAIN, 12f));
-        g.drawString(String.format(Locale.ROOT, "Size: %.2f x %.2f x %.2f mm (X x Y x Z)   %,d triangles",
-                mesh.size(0), mesh.size(1), mesh.size(2), mesh.triangleCount()), 12, 40);
-        g.setColor(new Color(70, 70, 70));
-        g.drawString("Left-drag: rotate   Wheel: zoom   Right-drag: pan   Double-click: reset view", 12, h - 12);
+        g.setColor(new Color(0x3F4651));
+        g.setFont(UiKit.BASE.deriveFont(12f));
+        g.drawString(I18n.tr("stl.size", I18n.mm(mesh.size(0)), I18n.mm(mesh.size(1)), I18n.mm(mesh.size(2)),
+                I18n.integer(mesh.triangleCount())), 14, 22);
+        g.setColor(UiKit.MUTED);
+        // The help line goes on two lines when it is too long for the box (some languages are verbose).
+        String help = I18n.tr("stl.help");
+        java.awt.FontMetrics fm = g.getFontMetrics();
+        if (fm.stringWidth(help) > w - 28 && help.contains(" \u00b7 ")) {
+            String[] parts = help.split(" \u00b7 ");
+            int half = (parts.length + 1) / 2;
+            String first = String.join(" \u00b7 ", java.util.Arrays.copyOfRange(parts, 0, half));
+            String second = String.join(" \u00b7 ", java.util.Arrays.copyOfRange(parts, half, parts.length));
+            g.drawString(first, 14, h - 12 - fm.getHeight());
+            g.drawString(second, 14, h - 12);
+        } else {
+            g.drawString(help, 14, h - 12);
+        }
     }
 
     private static int shade(int c, double intensity) {

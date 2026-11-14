@@ -1,0 +1,138 @@
+<div class="cover">
+  <img src="{{icon}}" alt="">
+  <div>
+    <h1>ORKtoSCAD</h1>
+    <div class="sub">Gebruikershandleiding · versie {{version}}</div>
+  </div>
+</div>
+
+<p class="lead">ORKtoSCAD zet een raket die met OpenRocket is ontworpen (<code>.ork</code>-bestand) om in bestanden
+om de onderdelen te maken: 3D-modellen om te printen, plannen om met laser of CNC te snijden, en OpenSCAD-modellen die je kunt aanpassen.</p>
+
+<h2><span class="n">1</span>Wat ORKtoSCAD maakt</h2>
+<p>Elk onderdeel van het ontwerp levert een of meer bestanden op, alle maten in <b>millimeters</b>:</p>
+<table>
+  <tr><th>OpenRocket-onderdeel</th><th class="c">STL (3D-print)</th><th class="c">SVG (laser / CNC)</th><th class="c">OpenSCAD</th></tr>
+  <tr><td>Neuskegel, overgang</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Rompbuis, koppelbuis, binnenbuis, motorstop</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+  <tr><td>Centreerring</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Schot</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Trapezium-, elliptische en vrije-vormvinnen (één vin met lip)</td><td class="c no">–</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+  <tr><td>Buisvinnen, lanceerbuisje, railknop</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+</table>
+<p>Onderdelen in pods en boosters worden op dezelfde manier behandeld. Parachutes, remlinten, schokkoorden en
+massaonderdelen zijn geen onderdelen om te printen of te snijden: ze worden overgeslagen en het rapport vermeldt hoeveel.</p>
+
+<h2><span class="n">2</span>Installeren en starten</h2>
+<ul>
+  <li><b>Windows-toepassing</b>: open de map <span class="file">ORKtoSCAD</span> en start
+    <span class="file">ORKtoSCAD.exe</span> (of de snelkoppeling in het Startmenu als je het installatieprogramma
+    hebt gebruikt). Houd de map compleet: ze bevat haar eigen Java, dus Java hoeft niet geïnstalleerd te zijn.</li>
+  <li><b>Java-versie</b> (Windows, macOS, Linux): met Java 16 of nieuwer geïnstalleerd dubbelklik je op
+    <span class="file">orkToScad.jar</span>, of typ je <code>java -jar orkToScad.jar</code>. Zet er een
+    <code>.ork</code>-bestand achter om het meteen te converteren.</li>
+  <li><b>OpenSCAD</b> (optioneel, gratis, <i>openscad.org</i>) is alleen nodig voor het tabblad <span class="ui">Render</span>
+    en om de <code>.scad</code>-bestanden aan te passen of te exporteren. STL- en SVG-bestanden worden ook zonder geschreven.</li>
+</ul>
+
+<h2><span class="n">3</span>Het venster</h2>
+<figure>
+  <img src="{{screenshot}}" alt="">
+</figure>
+<ol class="callouts">
+  <li><span class="num">1</span><span>Menu <span class="ui">Help</span>: deze handleiding (<kbd>F1</kbd>) en informatie over het programma.</span></li>
+  <li><span class="num">2</span><span>Het OpenRocket-bestand om te converteren. Typ het pad, gebruik <span class="ui">Bladeren…</span> of sleep het bestand op het venster.</span></li>
+  <li><span class="num">3</span><span>Uitvoermap. Er wordt een map <span class="file">&lt;ontwerp&gt;_out</span> naast het <code>.ork</code>-bestand voorgesteld; met <span class="ui">Bladeren…</span> kies je een andere.</span></li>
+  <li><span class="num">4</span><span><span class="ui">STL</span> en <span class="ui">SVG</span>: ook de 3D-bestanden en de snijplannen schrijven. De <code>.scad</code>-bestanden worden altijd geschreven.</span></li>
+  <li><span class="num">5</span><span><span class="ui">Converteren</span> start de conversie.</span></li>
+  <li><span class="num">6</span><span><span class="ui">Map openen…</span> toont de bestanden van een eerdere conversie, zonder opnieuw te converteren.</span></li>
+  <li><span class="num">7</span><span>Taal van het programma (zie paragraaf 8).</span></li>
+  <li><span class="num">8</span><span>De onderdelen, gegroepeerd per soort, met de beschikbare bestanden per onderdeel (STL, SVG, SCAD) en het aantal te maken exemplaren (×&nbsp;2…). Het vak bovenaan filtert de lijst op naam.</span></li>
+  <li><span class="num">9</span><span>3D-weergave van het gekozen onderdeel (STL-bestand).</span></li>
+  <li><span class="num">10</span><span>2D-plan van het gekozen onderdeel (SVG-bestand).</span></li>
+  <li><span class="num">11</span><span>OpenSCAD-code van het onderdeel, of de render door OpenSCAD.</span></li>
+  <li><span class="num">12</span><span>Resultaat van de laatste conversie. <span class="ui">Rapport tonen</span> geeft de details.</span></li>
+</ol>
+
+<h2><span class="n">4</span>Een ontwerp converteren</h2>
+<ol class="steps">
+  <li>Sla je ontwerp op in OpenRocket. Bestanden van alle recente versies worden gelezen, gecomprimeerd of niet.</li>
+  <li>Kies het <code>.ork</code>-bestand met <span class="ui">Bladeren…</span>, of sleep het gewoon op het venster: de conversie start dan meteen.</li>
+  <li>Controleer de uitvoermap en vink <span class="ui">STL</span> en/of <span class="ui">SVG</span> aan.</li>
+  <li>Klik op <span class="ui">Converteren</span>. De statusbalk toont het aantal geschreven bestanden, waarschuwingen en opmerkingen, en de onderdelen verschijnen in de lijst.</li>
+  <li>Klik op <span class="ui">Rapport tonen</span> om de lijst met bestanden, de <b>waarschuwingen</b> (bijvoorbeeld een onderdeel dat is overgeslagen omdat een maat ontbreekt) en de <b>opmerkingen</b> (aantal te maken exemplaren, onderdelen die niet worden gemaakt) te lezen.</li>
+</ol>
+<div class="note warn">Bestanden met dezelfde naam die al in de uitvoermap staan, worden vervangen.</div>
+
+<h2><span class="n">5</span>De bestanden</h2>
+<ul>
+  <li><b>Namen</b>: soort onderdeel en nummer in de volgorde van het ontwerp, bijvoorbeeld
+    <span class="file">body-tube-3d1.stl</span>, <span class="file">centeringring-CNC1.svg</span>,
+    <span class="file">noseCone-Ogive3D.scad</span>. <span class="file">3d</span> staat voor een 3D-onderdeel,
+    <span class="file">CNC</span> voor een vlakke snijcontour.</li>
+  <li><b>.scad</b>: OpenSCAD-model van het onderdeel, om met OpenSCAD te openen, aan te passen of te exporteren.</li>
+  <li><b>.stl</b>: hetzelfde onderdeel als het <code>.scad</code>-bestand, klaar voor de slicer. Het achtereinde ligt onderaan
+    (z&nbsp;=&nbsp;0) en de punt bovenaan; schouders zijn inbegrepen en met de wand verbonden.</li>
+  <li><b>.svg</b>: de snijcontour op ware grootte, als dunne rode lijn (0,1&nbsp;mm) zonder vulling: één gesloten contour voor een vin met lip, concentrische cirkels voor een ring of een schot.</li>
+  <li><b>Hoeveel</b>: per onderdeel wordt één bestand geschreven. Is een onderdeel meerdere keren nodig (aantal vinnen,
+    pods, meerdere railknoppen), dan toont de lijst ×&nbsp;<i>n</i> en vermeldt het rapport hoeveel je er moet maken.</li>
+  <li><b>„auto”-maten</b>: maten die in OpenRocket op <i>auto</i> staan (straal van een buis, van een ring…) worden
+    op dezelfde manier berekend als in OpenRocket.</li>
+</ul>
+
+<h2><span class="n">6</span>De onderdelen bekijken</h2>
+<p>Klik op een onderdeel in de lijst: de bestanden verschijnen in de drie vakken.</p>
+<h3>3D-weergave</h3>
+<p>Sleep om te draaien, gebruik het muiswiel om te zoomen, sleep met de rechterknop om te verschuiven en dubbelklik
+om terug te gaan naar de beginweergave (<span class="ui">Beginweergave</span>). <span class="ui">Doorsnede</span>
+snijdt het onderdeel doormidden om de wanddikte te tonen; binnenvlakken zijn blauw. Bovenaan staan de afmetingen
+van het onderdeel en het aantal driehoeken.</p>
+<h3>2D-plan</h3>
+<p>De snijlijn wordt in rood getekend op een millimeterraster (<span class="ui">mm-raster</span>), met de
+diameters van de cirkels of de afmetingen van de contour, en een schaalbalk. <span class="ui">Passend maken</span>
+toont het hele onderdeel; het muiswiel zoomt.</p>
+<h3>OpenSCAD</h3>
+<p><span class="ui">Code</span> toont de gekleurde code met regelnummers. Heeft een onderdeel meerdere
+<code>.scad</code>-bestanden (een centreerring heeft er een in 2D en een in 3D), kies het dan in de lijst naast de
+tabbladen. <span class="ui">Render</span> toont het onderdeel zoals OpenSCAD het berekent (dat kan enkele seconden duren).
+<span class="ui">Openen in OpenSCAD</span> opent het bestand met het programma dat aan <code>.scad</code>-bestanden is gekoppeld.</p>
+<div class="note">Is OpenSCAD geïnstalleerd maar wordt het niet gevonden, klik dan onderaan het vak op
+<span class="ui">Aangeven waar het geïnstalleerd is…</span> en kies <span class="file">openscad.exe</span>. De keuze wordt onthouden.</div>
+
+<h2><span class="n">7</span>De onderdelen maken</h2>
+<h3>3D-printen</h3>
+<ul>
+  <li>Open de <code>.stl</code>-bestanden in je slicer (PrusaSlicer, Cura, Bambu Studio…); de eenheid is de millimeter.</li>
+  <li>Lange rompbuizen worden in één stuk geschreven: deel ze in de slicer op als ze niet op je printer passen.</li>
+  <li>Het schroefgat van railknoppen is niet gemodelleerd: boor het, of voeg het toe in OpenSCAD.</li>
+</ul>
+<h3>Laser- of CNC-snijden</h3>
+<ul>
+  <li>De SVG-bestanden zijn in millimeters bemaat en worden op ware grootte geïmporteerd in LightBurn, Inkscape,
+    LaserGRBL… Controleer dat je software ze bij het importeren niet herschaalt.</li>
+  <li>Er wordt geen snedebreedtecompensatie (kerf) toegepast: stel die in je laser- of CAM-software in.</li>
+  <li>Vinnen: één vin per bestand, wortelkoorde onderaan met de lip; snijd het aangegeven aantal vinnen (×&nbsp;<i>n</i>).</li>
+</ul>
+
+<h2><span class="n">8</span>Taal</h2>
+<p>Het programma start in de taal van je computer als dat een van de 11 beschikbare talen is, anders in het Engels.
+Met de keuzelijst rechtsboven kies je een andere taal: het venster wisselt meteen en houdt de geladen onderdelen.
+<span class="ui">Automatisch</span> gaat terug naar de taal van de computer. De keuze wordt onthouden.</p>
+
+<h2><span class="n">9</span>Als er iets misgaat</h2>
+<ul>
+  <li><b>Er ontbreekt een onderdeel</b>: lees de waarschuwingen in het rapport. Een onderdeel met grootte <i>auto</i>
+    waarvoor niets bekend is, wordt overgeslagen: geef het een maat in OpenRocket en converteer opnieuw.</li>
+  <li><b>„OpenSCAD niet gevonden”</b>: installeer OpenSCAD, of geef aan waar het staat (paragraaf 6). De code blijft altijd zichtbaar.</li>
+  <li><b>Geen STL of SVG voor een onderdeel</b>: vlakke onderdelen hebben geen STL en 3D-onderdelen geen SVG; anders vink je de optie aan en converteer je opnieuw.</li>
+  <li><b>De handleiding opent niet</b>: er moet een pdf-lezer geïnstalleerd zijn.</li>
+</ul>
+
+<h2><span class="n">10</span>Contact</h2>
+<p>Vragen, suggesties of een ontwerp dat niet goed wordt geconverteerd: schrijf de auteur, met het versienummer en,
+indien mogelijk, het <code>.ork</code>-bestand.</p>
+<div class="contact">
+  <div><span>Auteur</span><b>{{author}}</b></div>
+  <div><span>E-mail</span><a href="mailto:{{email}}">{{email}}</a></div>
+  <div><span>Versie</span>{{version}}</div>
+</div>

@@ -12,11 +12,11 @@
  * You can change the values below and re-render (F6) in OpenSCAD.
  */
 
-shape  = "##shape##";              // conical | ogive | ellipsoid | powerseries | parabolicseries | haackseries
+shape  = "##shape##";              // conical | ogive | ellipsoid | power | parabolic | haack
 L      = ##length##;               // length of the cone (without shoulder)
 R      = ##aftradius##;            // radius at the base
 t      = ##thickness##;            // wall thickness, 0 = solid (filled) nose cone
-p      = ##shapeparameter##;       // OpenRocket shape parameter (ogive, power, parabolic, Haack)
+p      = ##shapeparameter##;       // OpenRocket shape parameter (ogive, power, parabolic: 0..1, haack: 0..1/3)
 Rs     = ##aftshoulderradius##;    // shoulder outer radius (0 = no shoulder)
 Ls     = ##aftshoulderlength##;    // shoulder length (0 = no shoulder)
 Ts     = ##aftshoulderthickness##; // shoulder wall thickness
@@ -25,36 +25,32 @@ capped = ##aftshouldercapped##;    // true = shoulder closed at the bottom
 steps = 100;   // number of points along the profile (denser near the tip)
 $fn   = 200;   // smoothness around the axis
 
-// ---------------------------------------------------------------- profile: radius at distance x from the tip
+// ---------------------------------------------------------------- OpenRocket shape formulas
+// Radius at distance x from the tip of a shape of base radius r and length l (same as OpenRocket).
 
-function conical(x) = R * x / L;
-
-function ogive(x) =
-    p < 0.001 ? conical(x) :
-    let (rho = sqrt((L * L + R * R) * (pow((2 - p) * L, 2) + pow(p * R, 2)) / (4 * pow(p * R, 2))),
-         Lp  = L / p,
-         y0  = sqrt(max(0, rho * rho - Lp * Lp)))
-    sqrt(max(0, rho * rho - pow(Lp - x, 2))) - y0;
-
-function ellipsoid(x) = let (xx = x * R / L) sqrt(max(0, 2 * R * xx - xx * xx));
-
-function powerseries(x) = p <= 0.00001 ? (x > 0 ? R : 0) : R * pow(x / L, p);
-
-function parabolicseries(x) = R * ((2 * x / L - p * pow(x / L, 2)) / (2 - p));
+function ogive_r(x, r, l) =
+    l < r ? ogive_r(x * r / l, r, r) :            // OpenRocket scales short ogives
+    p < 0.001 ? r * x / l :
+    let (rho = sqrt((l * l + r * r) * (pow((2 - p) * l, 2) + pow(p * r, 2)) / (4 * pow(p * r, 2))),
+         lp  = l / p,
+         y0  = sqrt(max(0, rho * rho - lp * lp)))
+    sqrt(max(0, rho * rho - pow(lp - x, 2))) - y0;
 
 // OpenSCAD trigonometry works in degrees: a is the angle theta of the Haack formula, in degrees.
-function haackseries(x) =
-    let (a = acos(max(-1, min(1, 1 - 2 * x / L))))
-    R * sqrt(max(0, (a * PI / 180 - sin(2 * a) / 2 + p * pow(sin(a), 3)) / PI));
+function haack_r(x, r, l) =
+    let (a = acos(max(-1, min(1, 1 - 2 * x / l))))
+    r * sqrt(max(0, (a * PI / 180 - sin(2 * a) / 2 + p * pow(sin(a), 3)) / PI));
 
-function radius(x) =
-    shape == "conical"         ? conical(x) :
-    shape == "ogive"           ? ogive(x) :
-    shape == "ellipsoid"       ? ellipsoid(x) :
-    shape == "powerseries"     ? powerseries(x) :
-    shape == "parabolicseries" ? parabolicseries(x) :
-    shape == "haackseries"     ? haackseries(x) :
+function shape_r(x, r, l) =
+    shape == "conical"   ? r * x / l :
+    shape == "ogive"     ? ogive_r(x, r, l) :
+    shape == "ellipsoid" ? let (xx = x * r / l) sqrt(max(0, 2 * r * xx - xx * xx)) :
+    shape == "power"     ? (p <= 0.00001 ? (x <= 0.00001 ? 0 : r) : r * pow(x / l, p)) :
+    shape == "parabolic" ? r * ((2 * x / l - p * pow(x / l, 2)) / (2 - p)) :
+    shape == "haack"     ? haack_r(x, r, l) :
     assert(false, str("Unknown nose cone shape: ", shape));
+
+function radius(x) = shape_r(x, R, L);
 
 // ---------------------------------------------------------------- 2D shapes (x = radius, y = height)
 

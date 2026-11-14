@@ -43,7 +43,7 @@ public final class OrkReader {
 
     public static Document read(Path orkFile) throws IOException {
         if (!Files.isRegularFile(orkFile)) {
-            throw new IOException("Input file not found: " + orkFile);
+            throw new I18n.LocalizedIOException(new I18n.Msg("err.input", orkFile));
         }
         try (InputStream raw = new BufferedInputStream(Files.newInputStream(orkFile))) {
             raw.mark(4);
@@ -60,7 +60,7 @@ public final class OrkReader {
             if (b0 == '<' || b0 == 0xEF /* UTF-8 BOM */ || Character.isWhitespace(b0)) {
                 return parse(raw);
             }
-            throw new IOException("Unrecognised file format (expected ZIP, GZIP or XML OpenRocket file): " + orkFile);
+            throw new I18n.LocalizedIOException(new I18n.Msg("err.format", orkFile));
         }
     }
 
@@ -73,7 +73,7 @@ public final class OrkReader {
                 return parse(zip);
             }
         }
-        throw new IOException("rocket.ork not found inside the .ork archive");
+        throw new I18n.LocalizedIOException(new I18n.Msg("err.noRocket"));
     }
 
     private static Document parse(InputStream in) throws IOException {
@@ -83,14 +83,14 @@ public final class OrkReader {
             Document doc = builder.parse(new LimitedInputStream(in, MAX_XML_BYTES));
             doc.getDocumentElement().normalize();
             if (!"openrocket".equals(doc.getDocumentElement().getNodeName())) {
-                throw new IOException("Not an OpenRocket file (root element is <"
-                        + doc.getDocumentElement().getNodeName() + ">)");
+                throw new I18n.LocalizedIOException(
+                        new I18n.Msg("err.notOpenRocket", doc.getDocumentElement().getNodeName()));
             }
             return doc;
         } catch (SAXException e) {
-            throw new IOException("Invalid OpenRocket XML: " + e.getMessage(), e);
+            throw new I18n.LocalizedIOException(new I18n.Msg("err.xml", e.getMessage()), e);
         } catch (ParserConfigurationException e) {
-            throw new IOException("XML parser configuration error: " + e.getMessage(), e);
+            throw new I18n.LocalizedIOException(new I18n.Msg("err.xmlConfig", e.getMessage()), e);
         }
     }
 
@@ -139,7 +139,7 @@ public final class OrkReader {
         private void check(int n) throws IOException {
             count += n;
             if (count > limit) {
-                throw new IOException("Decompressed design is larger than " + (limit / (1024 * 1024)) + " MB, aborting");
+                throw new I18n.LocalizedIOException(new I18n.Msg("err.tooLarge", limit / (1024 * 1024)));
             }
         }
 

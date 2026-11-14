@@ -19,7 +19,8 @@ import org.w3c.dom.NodeList;
  *
  * How {@code auto} values are resolved (same rules OpenRocket uses, simplified):
  * <ul>
- * <li>Body tube radius: aft radius of the previous external component, otherwise fore radius of the next one.</li>
+ * <li>Body tube radius: aft radius of the previous external component, otherwise fore radius of the next one
+ *     (inside a pod or booster, only its own components are considered).</li>
  * <li>Nose cone aft radius / transition radii: radius of the adjacent external component.</li>
  * <li>Tube coupler, bulkhead, centering ring outer radius: inner radius of the tube that contains it.</li>
  * <li>Centering ring inner radius: largest outer radius of the inner tubes mounted in the same tube
@@ -130,7 +131,48 @@ public final class OrkValues {
         return next == null ? Double.NaN : innerRadiusOf(next, new HashSet<>());
     }
 
-    /** Outer radius of a component that sits inside a tube (coupler, bulkhead, centering ring). */
+    /** Fore and aft radii (mm) of a transition, resolving "auto" from the neighbouring components. */
+    public static double[] transitionRadii(Element transition) {
+        return new double[] { transitionRadius(transition, "foreradius", -1, new HashSet<>()),
+                transitionRadius(transition, "aftradius", +1, new HashSet<>()) };
+    }
+
+    /**
+     * Outer radius (mm) of the tubes of a tube fin set. "auto" works like OpenRocket: the body tube
+     * radius for 1 or 2 tubes, otherwise the radius at which neighbouring tubes touch.
+     */
+    public static double tubeFinRadius(Element tubeFinSet) {
+        String raw = text(tubeFinSet, "radius");
+        if (raw == null) {
+            raw = text(tubeFinSet, "outerradius");
+        }
+        double v = mm(raw);
+        if (!Double.isNaN(v) || !isAuto(raw)) {
+            return v;
+        }
+        Element parent = parentComponent(tubeFinSet);
+        if (parent == null || !parent.getNodeName().equals("bodytube")) {
+            return Double.NaN;
+        }
+        double body = bodyTubeRadius(parent);
+        String countRaw = text(tubeFinSet, "fincount");
+        if (countRaw == null) {
+            countRaw = text(tubeFinSet, "instancecount");
+        }
+        int fins;
+        try {
+            fins = countRaw == null ? 6 : Integer.parseInt(countRaw.trim());
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
+        if (fins < 3) {
+            return body;
+        }
+        double sep = Math.PI / fins;
+        return body * Math.sin(sep) / (1.0 - Math.sin(sep));
+    }
+
+    /** Outer radius of a component that sits inside a tube (coupler, bulkhead, centering ring, engine block). */
     public static double outerRadiusInsideParent(Element comp, String tag) {
         String raw = text(comp, tag);
         double v = mm(raw);
@@ -176,7 +218,13 @@ public final class OrkValues {
      * or null when it cannot be determined.
      */
     private static double[] axialSpan(Element comp) {
+        // Legacy <position type="..."> or newer <axialoffset method="...">
         Element posEl = child(comp, "position");
+        String method = posEl == null ? null : posEl.getAttribute("type");
+        if (posEl == null) {
+            posEl = child(comp, "axialoffset");
+            method = posEl == null ? null : posEl.getAttribute("method");
+        }
         double len = mm(comp, "length");
         Element parent = parentComponent(comp);
         if (posEl == null || Double.isNaN(len) || parent == null) {
@@ -188,7 +236,7 @@ public final class OrkValues {
             return null;
         }
         double top;
-        switch (posEl.getAttribute("type")) {
+        switch (method) {
             case "top":
                 top = pos;
                 break;
@@ -314,27 +362,46 @@ public final class OrkValues {
         return (j >= 0 && j < chain.size()) ? chain.get(j) : null;
     }
 
-    /** All external components of the rocket in document (= nose-to-tail) order. */
-    private static List<Element> externalChain(Element anyComp) {
+    /**
+     * External components (nose cones, body tubes, transitions) lined up with {@code comp}, nose to tail:
+     * <ul>
+     * <li>for the main airframe, the components of all the stages, in order;</li>
+     * <li>inside a pod set or a booster (parallel stage), the components of that pod/booster only.</li>
+     * </ul>
+     */
+    private static List<Element> externalChain(Element comp) {
         List<Element> out = new ArrayList<>();
-        Element root = anyComp.getOwnerDocument().getDocumentElement();
-        collectExternal(root, out);
+        String owner = ownerName(comp);
+        if ("stage".equals(owner)) {
+            collectStageLevel(comp.getOwnerDocument().getDocumentElement(), out);
+        } else if (AIRFRAME_OWNERS.contains(owner)) {
+            for (Element c : elements(comp.getParentNode())) {
+                if (EXTERNAL.contains(c.getNodeName())) {
+                    out.add(c);
+                }
+            }
+        }
         return out;
     }
 
-    private static void collectExternal(Element e, List<Element> out) {
+    /** Assemblies whose subcomponents form an airframe (a line of external components). */
+    private static final Set<String> AIRFRAME_OWNERS = Set.of("stage", "podset", "parallelstage", "boosterset");
+
+    private static void collectStageLevel(Element e, List<Element> out) {
         for (Element c : elements(e)) {
-            if (EXTERNAL.contains(c.getNodeName()) && isInStage(c)) {
+            if (EXTERNAL.contains(c.getNodeName()) && "stage".equals(ownerName(c))) {
                 out.add(c);
             }
-            collectExternal(c, out);
+            collectStageLevel(c, out);
         }
     }
 
-    /** Direct child of a stage's subcomponents (i.e. part of the outer airframe). */
-    private static boolean isInStage(Element c) {
+    /** Name of the element that owns the {@code <subcomponents>} containing {@code c}, or null. */
+    private static String ownerName(Element c) {
         Node sub = c.getParentNode();
-        return sub != null && sub.getNodeName().equals("subcomponents")
-                && sub.getParentNode() != null && sub.getParentNode().getNodeName().equals("stage");
+        if (sub == null || !sub.getNodeName().equals("subcomponents") || sub.getParentNode() == null) {
+            return null;
+        }
+        return sub.getParentNode().getNodeName();
     }
 }
